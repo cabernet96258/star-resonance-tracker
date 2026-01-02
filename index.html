@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>スターレゾナンス：モバイルトラッカー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* タップ時のハイライトを抑制 */
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f5f5f4; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1; 
+            border-radius: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 250px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+
+        /* モバイル用ナビゲーションの調整 */
+        .tab-active {
+            border-bottom: 3px solid #f97316;
+            color: #44403c;
+            font-weight: 700;
+        }
+        
+        /* チェック時のアニメーション */
+        .task-checkbox:checked + div {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        /* モバイルでの押しやすさを考慮したボタン */
+        .btn-touch {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone/Orange/Amber) -->
+    <!-- Application Structure Plan:
+         1. Information Architecture: Optimized for one-handed operation on mobile.
+         2. Layout: 
+            - Header: Sticky with high visibility.
+            - Dashboard: Compact radar chart that shrinks on small screens to save vertical space.
+            - Tab Bar: Full-width sticky navigation.
+         3. Interactions:
+            - Large checkboxes (24px) for easier tapping.
+            - Reset buttons moved to a more prominent but safe location.
+            - Feedback: Visual state changes on tap.
+         4. Mobile Tips: Added a help section within the app for deployment instructions.
+    -->
+    <!-- Visualization & Content Choices:
+         - Radar Chart: Ideal for comparing categories at a glance on small screens.
+         - Checkboxes: Styled as large interactive cards to prevent miss-clicks.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans min-h-screen flex flex-col pb-10">
+
+    <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h1 class="text-lg md:text-2xl font-bold text-stone-700 tracking-tight">SR Assist Mobile</h1>
+                <p class="text-[10px] md:text-sm text-stone-500">毎日の開拓をスマートに記録</p>
+            </div>
+            <button onclick="toggleHelp()" class="text-stone-400 hover:text-stone-600 p-2">
+                ❓
+            </button>
+        </div>
+    </header>
+
+    <!-- Help Overlay -->
+    <div id="help-overlay" class="fixed inset-0 bg-stone-900/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-lg mb-4">スマホでの使い方</h3>
+            <ul class="text-sm space-y-3 text-stone-600 mb-6">
+                <li>✅ 項目をタップしてチェック！</li>
+                <li>🔄 各タブの「リセット」で一括クリア</li>
+                <li>📊 グラフで今日のプレイ傾向を確認</li>
+                <li class="pt-2 border-t font-medium text-stone-800">スマホ画面への追加:</li>
+                <li class="pl-2">ブラウザの共有メニューから「ホーム画面に追加」を選ぶと、アプリのように使えます。</li>
+            </ul>
+            <button onclick="toggleHelp()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold">閉じる</button>
+        </div>
+    </div>
+
+    <main class="flex-grow container mx-auto px-4 py-4 max-w-4xl space-y-6">
+
+        <!-- Progress Overview -->
+        <section class="bg-white rounded-2xl shadow-sm p-4 border border-stone-200 overflow-hidden">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <!-- Radar Chart Area -->
+                <div class="w-full md:w-1/2">
+                    <div class="chart-container">
+                        <canvas id="progressRadar"></canvas>
+                    </div>
+                </div>
+
+                <!-- Progress Bars Area -->
+                <div class="w-full md:w-1/2 grid grid-cols-1 gap-3">
+                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>デイリー</span>
+                            <span id="daily-text" class="text-orange-600">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-200 rounded-full h-2">
+                            <div id="daily-bar" class="bg-orange-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>ウィークリー</span>
+                            <span id="weekly-text" class="text-stone-600">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-200 rounded-full h-2">
+                            <div id="weekly-bar" class="bg-stone-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>物資提出</span>
+                            <span id="material-text" class="text-amber-600">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-200 rounded-full h-2">
+                            <div id="material-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs - Sticky on Mobile -->
+        <nav class="flex bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden sticky top-[68px] z-10">
+            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-active">
+                日課
+            </button>
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-inactive">
+                週課
+            </button>
+            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-inactive">
+                物資
+            </button>
+        </nav>
+
+        <!-- Tab Contents -->
+        <div id="content-area" class="pb-10">
+            <!-- Content injected via JS -->
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const dailyData = [
+            { id: 'd_guild_att', label: 'ギルド出席', desc: 'ワンタップ出席', category: 'Lifestyle', icon: '🏢' },
+            { id: 'd_guild_trans', label: 'ギルド輸送', desc: '物資運搬報酬', category: 'Economy', icon: '🚚' },
+            { id: 'd_pioneer_req', label: '開拓局依頼', desc: '掲示板デイリー', category: 'Lifestyle', icon: '📜' },
+            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '👹' },
+            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '🛡️' },
+            { id: 'd_home_req', label: 'ホーム依頼', desc: '掲示板確認', category: 'Lifestyle', icon: '🏠' },
+            { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
+            { id: 'd_unstable', label: '不安定な空間', desc: '戦力強化素材', category: 'Battle', icon: '⚔️' },
+            { id: 'd_season', label: 'シーズン活躍度', desc: '報酬受取', category: 'Economy', icon: '🎁' },
+            { id: 'd_focus', label: 'フォーカス消費', desc: 'スタミナ消化', category: 'Lifestyle', icon: '⚡' },
+            { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜 参加', category: 'Battle', icon: '⏰' },
+        ];
+
+        const weeklyData = [
+            { id: 'w_shop_myst', label: '神秘ストア', desc: '優待/箱/結晶', category: 'Economy', icon: '🛒' },
+            { id: 'w_shop_gem', label: 'カラフル(ジェム)', desc: 'ガチャコイン', category: 'Economy', icon: '💎' },
+            { id: 'w_shop_friend', label: 'カラフル(友情)', desc: 'ジェム', category: 'Economy', icon: '🤝' },
+            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '奥義/ランクアップ', category: 'Economy', icon: '💳' },
+            { id: 'w_shop_fame', label: 'カラフル(名声)', desc: 'ウィルコイン', category: 'Economy', icon: '🏅' },
+            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材/パーツ', category: 'Economy', icon: '🍂' },
+            { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: '回復剤購入', category: 'Economy', icon: '🏚️' },
+            { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取', category: 'Economy', icon: '🏛️' },
+            { id: 'w_guild_act', label: 'ギルド活躍報酬', desc: '週次ランク確認', category: 'Lifestyle', icon: '📊' },
+            { id: 'w_regdinis', label: 'レグディニス', desc: '遺跡攻略状況', category: 'Battle', icon: '🗿' },
+            { id: 'w_hunt', label: 'ギルドハント', desc: '金〜日 開催', category: 'Battle', icon: '🏹' },
+            { id: 'w_dance', label: 'ギルドダンス', desc: '金 19:30〜', category: 'Lifestyle', icon: '💃' },
+        ];
+
+        const materialData = [
+            { id: 'm_wood', type: '木工', req: '松材 × 40', category: 'Economy' },
+            { id: 'm_cryst', type: '結晶学', req: '粘土80, 細砂80, 水80, 塩80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '草80, 液体80, 土80, 樹脂80', category: 'Economy' },
+            { id: 'm_alch', type: '錬金', req: '石の粉 × 40', category: 'Economy' },
+            { id: 'm_forge', type: '鍛造', req: '鉄インゴット × 40', category: 'Economy' },
+            { id: 'm_textile', type: '織物', req: '改良綿布 × 20', category: 'Economy' },
+            { id: 'm_craft', type: '工芸', req: '砂岩砥石 × 40', category: 'Economy' },
+            { id: 'm_cook', type: '料理', req: '小麦粉 × 45', category: 'Economy' },
+            { id: 'm_mineral', type: '鉱物学', req: '粘土80, 細砂80, 水80, 金属砂80', category: 'Economy' },
+        ];
+
+        // --- STATE ---
+        let state = {
+            checked: JSON.parse(localStorage.getItem('sr_assist_mobile')) || {},
+            activeTab: 'daily'
+        };
+
+        let myChart = null;
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            switchTab('daily');
+        });
+
+        function toggleHelp() {
+            const overlay = document.getElementById('help-overlay');
+            overlay.classList.toggle('hidden');
+        }
+
+        function save() {
+            localStorage.setItem('sr_assist_mobile', JSON.stringify(state.checked));
+        }
+
+        function toggleTask(id) {
+            if (state.checked[id]) delete state.checked[id];
+            else state.checked[id] = true;
+            save();
+            updateUI();
+        }
+
+        function resetCategory() {
+            const prefix = state.activeTab === 'daily' ? 'd_' : (state.activeTab === 'weekly' ? 'w_' : 'm_');
+            Object.keys(state.checked).forEach(key => {
+                if (key.startsWith(prefix)) delete state.checked[key];
+            });
+            save();
+            updateUI();
+        }
+
+        function updateUI() {
+            const d = getStats(dailyData);
+            const w = getStats(weeklyData);
+            const m = getStats(materialData);
+
+            document.getElementById('daily-text').innerText = `${d.pct}%`;
+            document.getElementById('daily-bar').style.width = `${d.pct}%`;
+            document.getElementById('weekly-text').innerText = `${w.pct}%`;
+            document.getElementById('weekly-bar').style.width = `${w.pct}%`;
+            document.getElementById('material-text').innerText = `${m.pct}%`;
+            document.getElementById('material-bar').style.width = `${m.pct}%`;
+
+            if (myChart) {
+                myChart.data.datasets[0].data = getRadarValues();
+                myChart.update();
+            }
+            renderList();
+        }
+
+        function getStats(data) {
+            const total = data.length;
+            const done = data.filter(item => state.checked[item.id]).length;
+            return { pct: total ? Math.round((done / total) * 100) : 0 };
+        }
+
+        function getRadarValues() {
+            let scores = { Battle: {d:0,t:0}, Lifestyle: {d:0,t:0}, Economy: {d:0,t:0} };
+            [...dailyData, ...weeklyData, ...materialData].forEach(item => {
+                scores[item.category].t++;
+                if (state.checked[item.id]) scores[item.category].d++;
+            });
+            return [
+                scores.Battle.t ? (scores.Battle.d / scores.Battle.t) * 100 : 0,
+                scores.Lifestyle.t ? (scores.Lifestyle.d / scores.Lifestyle.t) * 100 : 0,
+                scores.Economy.t ? (scores.Economy.d / scores.Economy.t) * 100 : 0
+            ];
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('progressRadar').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['バトル', '生活', '経済'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        borderColor: 'rgb(249, 115, 22)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(249, 115, 22)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { display: false, stepSize: 20 },
+                            grid: { color: '#e7e5e4' },
+                            pointLabels: { font: { size: 10, weight: 'bold' } }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function switchTab(name) {
+            state.activeTab = name;
+            ['daily', 'weekly', 'materials'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === name) {
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('tab-inactive', 'bg-stone-50');
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive', 'bg-stone-50');
+                }
+            });
+            updateUI();
+        }
+
+        function renderList() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = '';
+
+            // Section Info & Reset
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center py-4 animate-fade-in';
+            header.innerHTML = `
+                <span class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">
+                    ${state.activeTab === 'materials' ? 'REQUIRED MATERIALS' : 'ACTIVE TASKS'}
+                </span>
+                <button onclick="resetCategory()" class="text-[10px] font-bold bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100 active:scale-95 transition-transform">
+                    RESTART SECTION
+                </button>
+            `;
+            container.appendChild(header);
+
+            if (state.activeTab === 'materials') {
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 gap-3 animate-fade-in';
+                materialData.forEach(item => {
+                    const isChecked = state.checked[item.id];
+                    grid.innerHTML += `
+                        <div onclick="toggleTask('${item.id}')" 
+                            class="border rounded-2xl p-3 transition-all active:scale-95 ${isChecked ? 'bg-stone-200 border-transparent opacity-50' : 'bg-white border-stone-200'}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] font-black text-stone-400">${item.type}</span>
+                                <span class="text-xs">${isChecked ? '✅' : '📦'}</span>
+                            </div>
+                            <p class="text-[11px] font-bold leading-tight text-stone-800">${item.req.replace(/, /g, '<br>')}</p>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+            } else {
+                const list = document.createElement('div');
+                list.className = 'space-y-3 animate-fade-in';
+                const data = state.activeTab === 'daily' ? dailyData : weeklyData;
+                data.forEach(item => {
+                    const isChecked = state.checked[item.id];
+                    list.innerHTML += `
+                        <div onclick="toggleTask('${item.id}')" 
+                            class="flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] ${isChecked ? 'bg-stone-100 border-transparent' : 'bg-white border-stone-200 shadow-sm'}">
+                            <div class="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-xl mr-4 border border-stone-100">
+                                ${item.icon}
+                            </div>
+                            <div class="flex-1 ${isChecked ? 'line-through text-stone-400' : ''}">
+                                <h4 class="text-sm font-bold text-stone-800">${item.label}</h4>
+                                <p class="text-[10px] text-stone-500">${item.desc}</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-orange-500 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-[10px]">✔</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(list);
+            }
+        }
+    </script>
+</body>
+</html>
