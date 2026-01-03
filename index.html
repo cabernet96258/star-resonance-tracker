@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>スターレゾナンス：モバイルトラッカー</title>
+    <title>BPSR Assist Mobile：スターレゾナンス トラッカー</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -45,32 +45,16 @@
             text-decoration: line-through;
         }
 
-        /* モバイルでの押しやすさを考慮したボタン */
-        .btn-touch {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* アニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
         }
     </style>
     <!-- Chosen Palette: Warm Neutrals (Stone/Orange/Amber) -->
-    <!-- Application Structure Plan:
-         1. Information Architecture: Optimized for one-handed operation on mobile.
-         2. Layout: 
-            - Header: Sticky with high visibility.
-            - Dashboard: Compact radar chart that shrinks on small screens to save vertical space.
-            - Tab Bar: Full-width sticky navigation.
-         3. Interactions:
-            - Large checkboxes (24px) for easier tapping.
-            - Reset buttons moved to a more prominent but safe location.
-            - Feedback: Visual state changes on tap.
-         4. Mobile Tips: Added a help section within the app for deployment instructions.
-    -->
-    <!-- Visualization & Content Choices:
-         - Radar Chart: Ideal for comparing categories at a glance on small screens.
-         - Checkboxes: Styled as large interactive cards to prevent miss-clicks.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="bg-stone-50 text-stone-800 font-sans min-h-screen flex flex-col pb-10">
 
@@ -176,6 +160,7 @@
             { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '🛡️' },
             { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材、ホームEXP、ホームコイン、ホーム肥料', category: 'Lifestyle', icon: '🏠' },
             { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
+            { id: 'd_alch_exp', label: '錬金実験', desc: '10EXP×5・玩具花火', category: 'Lifestyle', icon: '⚗️' },
             { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
             { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
             { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
@@ -211,7 +196,7 @@
 
         // --- STATE ---
         let state = {
-            checked: JSON.parse(localStorage.getItem('sr_assist_mobile')) || {},
+            checked: JSON.parse(localStorage.getItem('sr_assist_mobile_v2')) || {},
             activeTab: 'daily'
         };
 
@@ -229,7 +214,7 @@
         }
 
         function save() {
-            localStorage.setItem('sr_assist_mobile', JSON.stringify(state.checked));
+            localStorage.setItem('sr_assist_mobile_v2', JSON.stringify(state.checked));
         }
 
         function toggleTask(id) {
@@ -342,10 +327,10 @@
             header.className = 'flex justify-between items-center py-4 animate-fade-in';
             header.innerHTML = `
                 <span class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">
-                    ${state.activeTab === 'materials' ? 'REQUIRED MATERIALS' : 'ACTIVE TASKS'}
+                    ${state.activeTab === 'materials' ? '提出物資リスト' : 'アクティブタスク'}
                 </span>
                 <button onclick="resetCategory()" class="text-[10px] font-bold bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100 active:scale-95 transition-transform">
-                    RESTART SECTION
+                    リストをリセット
                 </button>
             `;
             container.appendChild(header);
@@ -359,7 +344,7 @@
                         <div onclick="toggleTask('${item.id}')" 
                             class="border rounded-2xl p-3 transition-all active:scale-95 ${isChecked ? 'bg-stone-200 border-transparent opacity-50' : 'bg-white border-stone-200'}">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] font-black text-stone-400">${item.type}</span>
+                                <span class="text-[9px] font-black text-stone-400 uppercase tracking-tighter">${item.type}</span>
                                 <span class="text-xs">${isChecked ? '✅' : '📦'}</span>
                             </div>
                             <p class="text-[11px] font-bold leading-tight text-stone-800">${item.req.replace(/, /g, '<br>')}</p>
@@ -381,7 +366,7 @@
                             </div>
                             <div class="flex-1 ${isChecked ? 'line-through text-stone-400' : ''}">
                                 <h4 class="text-sm font-bold text-stone-800">${item.label}</h4>
-                                <p class="text-[10px] text-stone-500">${item.desc}</p>
+                                <p class="text-[10px] text-stone-500 mt-0.5">${item.desc}</p>
                             </div>
                             <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-orange-500 border-orange-500' : 'border-stone-200'}">
                                 ${isChecked ? '<span class="text-white text-[10px]">✔</span>' : ''}
