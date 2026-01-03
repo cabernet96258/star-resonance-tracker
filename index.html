@@ -77,8 +77,8 @@
     <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-20">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-stone-700 tracking-tight">SR Assist Mobile</h1>
-                <p class="text-[10px] md:text-sm text-stone-500">毎日の開拓をスマートに記録</p>
+                <h1 class="text-lg md:text-2xl font-bold text-stone-700 tracking-tight">BPSR Assist Mobile</h1>
+                <p class="text-[10px] md:text-sm text-stone-500">スタレゾの活動をスマートに記録</p>
             </div>
             <button onclick="toggleHelp()" class="text-stone-400 hover:text-stone-600 p-2">
                 ❓
@@ -169,27 +169,27 @@
     <script>
         // --- DATA ---
         const dailyData = [
-            { id: 'd_guild_att', label: 'ギルド出席', desc: 'ワンタップ出席', category: 'Lifestyle', icon: '🏢' },
-            { id: 'd_guild_trans', label: 'ギルド輸送', desc: '物資運搬報酬', category: 'Economy', icon: '🚚' },
-            { id: 'd_pioneer_req', label: '開拓局依頼', desc: '掲示板デイリー', category: 'Lifestyle', icon: '📜' },
+            { id: 'd_guild_att', label: 'ギルドチェックイン', desc: 'ギルドEXP・ギルド資金・ギルド活躍度', category: 'Lifestyle', icon: '🏢' },
+            { id: 'd_guild_trans', label: 'ギルド輸送', desc: 'ギルドコイン・ルーノ・宝箱など', category: 'Economy', icon: '🚚' },
+            { id: 'd_pioneer_req', label: '開拓局依頼', desc: 'ルーノ・名声・GC・メダル', category: 'Lifestyle', icon: '📜' },
             { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '👹' },
             { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '🛡️' },
-            { id: 'd_home_req', label: 'ホーム依頼', desc: '掲示板確認', category: 'Lifestyle', icon: '🏠' },
+            { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材、ホームEXP、ホームコイン、ホーム肥料', category: 'Lifestyle', icon: '🏠' },
             { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
-            { id: 'd_unstable', label: '不安定な空間', desc: '戦力強化素材', category: 'Battle', icon: '⚔️' },
-            { id: 'd_season', label: 'シーズン活躍度', desc: '報酬受取', category: 'Economy', icon: '🎁' },
-            { id: 'd_focus', label: 'フォーカス消費', desc: 'スタミナ消化', category: 'Lifestyle', icon: '⚡' },
-            { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜 参加', category: 'Battle', icon: '⏰' },
+            { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
+            { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
+            { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
+            { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
         ];
 
         const weeklyData = [
-            { id: 'w_shop_myst', label: '神秘ストア', desc: '優待/箱/結晶', category: 'Economy', icon: '🛒' },
+            { id: 'w_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書/優待/箱/結晶', category: 'Economy', icon: '🛒' },
             { id: 'w_shop_gem', label: 'カラフル(ジェム)', desc: 'ガチャコイン', category: 'Economy', icon: '💎' },
             { id: 'w_shop_friend', label: 'カラフル(友情)', desc: 'ジェム', category: 'Economy', icon: '🤝' },
             { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '奥義/ランクアップ', category: 'Economy', icon: '💳' },
             { id: 'w_shop_fame', label: 'カラフル(名声)', desc: 'ウィルコイン', category: 'Economy', icon: '🏅' },
             { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材/パーツ', category: 'Economy', icon: '🍂' },
-            { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: '回復剤購入', category: 'Economy', icon: '🏚️' },
+            { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
             { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取', category: 'Economy', icon: '🏛️' },
             { id: 'w_guild_act', label: 'ギルド活躍報酬', desc: '週次ランク確認', category: 'Lifestyle', icon: '📊' },
             { id: 'w_regdinis', label: 'レグディニス', desc: '遺跡攻略状況', category: 'Battle', icon: '🗿' },
@@ -199,14 +199,14 @@
 
         const materialData = [
             { id: 'm_wood', type: '木工', req: '松材 × 40', category: 'Economy' },
-            { id: 'm_cryst', type: '結晶学', req: '粘土80, 細砂80, 水80, 塩80', category: 'Economy' },
-            { id: 'm_botany', type: '植物学', req: '草80, 液体80, 土80, 樹脂80', category: 'Economy' },
-            { id: 'm_alch', type: '錬金', req: '石の粉 × 40', category: 'Economy' },
+            { id: 'm_cryst', type: '結晶学', req: '粘土80, 細砂80, 清らかな湧水80, 岩塩80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80, 酸っぱい果実の液体80, 基質土80, 樹脂80', category: 'Economy' },
+            { id: 'm_alch', type: '錬金', req: '謎の石の粉 × 40', category: 'Economy' },
             { id: 'm_forge', type: '鍛造', req: '鉄インゴット × 40', category: 'Economy' },
             { id: 'm_textile', type: '織物', req: '改良綿布 × 20', category: 'Economy' },
-            { id: 'm_craft', type: '工芸', req: '砂岩砥石 × 40', category: 'Economy' },
+            { id: 'm_craft', type: '工芸', req: '砂岩の砥石 × 40', category: 'Economy' },
             { id: 'm_cook', type: '料理', req: '小麦粉 × 45', category: 'Economy' },
-            { id: 'm_mineral', type: '鉱物学', req: '粘土80, 細砂80, 水80, 金属砂80', category: 'Economy' },
+            { id: 'm_mineral', type: '鉱物学', req: '粘土80, 細砂80, 清らかな湧き水80, 金属砂80', category: 'Economy' },
         ];
 
         // --- STATE ---
