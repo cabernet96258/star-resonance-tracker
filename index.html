@@ -177,7 +177,7 @@
                             <span id="material-text" class="text-amber-500 text-lg">0%</span>
                         </div>
                         <div class="w-full bg-stone-800 rounded-full h-3">
-                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -220,10 +220,7 @@
         ];
 
         const weeklyData = [
-            { id: 'w_shop_gem', label: 'カラフル(ジェム)', desc: 'ガチャコイン', category: 'Economy', icon: '💎' },
-            { id: 'w_shop_friend', label: 'カラフル(友情)', desc: 'ジェム', category: 'Economy', icon: '🤝' },
-            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '御座金・ルーン合金・欠片・結晶・改鋳石・モジュール・奥義・ランクアップ', category: 'Economy', icon: '💳' },
-            { id: 'w_shop_fame', label: 'カラフル(名声)', desc: 'ウィルコイン', category: 'Economy', icon: '🏅' },
+            { id: 'w_shop_colorful', label: 'カラフルストア', desc: 'ジェム・友情・GC・名声の各項目を確認', category: 'Economy', icon: '💎', isColorfulStore: true },
             { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材・虚蝕・パワーパーツ', category: 'Economy', icon: '🍂' },
             { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
             { id: 'w_module', label: 'モジュール', desc: '分解・交換', category: 'Economy', icon: '⚙️' },
@@ -370,6 +367,30 @@
             updateUI();
         }
 
+        function toggleSubStore(subId) {
+            const fullId = `w_shop_${subId}`;
+            state.lastClickedId = fullId;
+            if (state.checked[fullId]) {
+                delete state.checked[fullId];
+                state.lastClickedId = null;
+            } else {
+                state.checked[fullId] = true;
+            }
+            
+            const subs = ['gem', 'friend', 'gc', 'fame'];
+            const allCleared = subs.every(s => state.checked[`w_shop_${s}`]);
+            
+            if (allCleared) {
+                if (!state.checked['w_shop_colorful']) state.lastClickedId = 'w_shop_colorful';
+                state.checked['w_shop_colorful'] = true;
+            } else {
+                delete state.checked['w_shop_colorful'];
+            }
+            
+            save();
+            updateUI();
+        }
+
         function setRegdinisFloor(floor) {
             if (floor > 50) return; 
 
@@ -399,6 +420,9 @@
                             delete state.checked[`w_raid_${d}_hard`];
                             delete state.checked[`w_raid_${d}_ultimate`];
                         });
+                    }
+                    if (t.isColorfulStore) {
+                        ['gem', 'friend', 'gc', 'fame'].forEach(s => delete state.checked[`w_shop_${s}`]);
                     }
                 });
                 state.regdinisFloor = 0;
@@ -580,6 +604,52 @@
                                     </label>
                                 </div>
                                 ${dragonCleared ? '<div class="mt-2 text-[8px] text-orange-600 font-black animate-pop tracking-tighter">COMPLETE！</div>' : ''}
+                            </div>
+                        `;
+                    });
+                    content += `</div>`;
+                    card.innerHTML = content;
+                    list.appendChild(card);
+
+                } else if (item.isColorfulStore) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let content = `
+                        <div class="flex items-center mb-6">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                ${item.icon}
+                            </div>
+                            <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                                <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                    `;
+
+                    const subStores = [
+                        { id: 'gem', label: 'ローズジェム', desc: 'ガチャコイン' },
+                        { id: 'friend', label: '友情ポイント', desc: 'ジェム' },
+                        { id: 'gc', label: 'GC', desc: '御座金・ルーン合金・欠片・結晶・改鋳石・モジュール・奥義・ランクアップ' },
+                        { id: 'fame', label: '名声', desc: 'ウィルコイン' }
+                    ];
+
+                    subStores.forEach(s => {
+                        const subChecked = state.checked[`w_shop_${s.id}`];
+                        const isSubNew = state.lastClickedId === `w_shop_${s.id}`;
+                        content += `
+                            <div onclick="toggleSubStore('${s.id}'); event.stopPropagation();" 
+                                class="${subChecked ? 'bg-orange-50 border-orange-100' : 'bg-stone-50 border-stone-100'} p-3 rounded-2xl border flex items-center transition-all ${isSubNew && subChecked ? 'animate-pop' : ''}">
+                                <input type="checkbox" class="custom-check mr-4" ${subChecked ? 'checked' : ''} onclick="event.stopPropagation();" onchange="toggleSubStore('${s.id}')">
+                                <div class="flex-1">
+                                    <span class="text-sm font-black text-stone-900 ${subChecked ? 'line-through opacity-40' : ''}">${s.label}</span>
+                                    <p class="text-[10px] text-stone-500 font-bold leading-tight ${subChecked ? 'opacity-30' : ''}">${s.desc}</p>
+                                </div>
+                                ${subChecked ? '<span class="text-orange-500 font-black text-[10px] ml-2">OK！</span>' : ''}
                             </div>
                         `;
                     });
