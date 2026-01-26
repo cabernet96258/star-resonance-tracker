@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BPSR Assist Mobile：スターレゾナンス トラッカー</title>
+    <title>BPSR Assist Mobile：高視認性ナビ版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -14,10 +14,10 @@
             width: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f5f5f4; 
+            background: #1c1917; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #d6d3d1; 
+            background: #44403c; 
             border-radius: 10px;
         }
 
@@ -32,19 +32,14 @@
             .chart-container { height: 320px; }
         }
 
-        /* モバイル用ナビゲーションの調整 */
+        /* ナビゲーションタブのスタイル改善 */
         .tab-active {
-            border-bottom: 3px solid #f97316;
-            color: #44403c;
-            font-weight: 700;
+            border-bottom: 4px solid #f97316;
+            color: #ffffff !important;
+            font-weight: 800;
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
-        /* チェック時のアニメーション */
-        .task-checkbox:checked + div {
-            opacity: 0.5;
-            text-decoration: line-through;
-        }
-
         /* アニメーション */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
@@ -54,75 +49,72 @@
             animation: fadeIn 0.3s ease-out forwards;
         }
     </style>
-    <!-- Chosen Palette: Warm Neutrals (Stone/Orange/Amber) -->
 </head>
-<body class="bg-stone-50 text-stone-800 font-sans min-h-screen flex flex-col pb-10">
+<body class="bg-stone-950 text-stone-200 font-sans min-h-screen flex flex-col pb-10">
 
-    <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-20">
+    <header class="bg-stone-900 shadow-lg border-b border-stone-800 sticky top-0 z-20">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-stone-700 tracking-tight">BPSR Assist Mobile</h1>
-                <p class="text-[10px] md:text-sm text-stone-500">スタレゾの活動をスマートに記録</p>
+                <h1 class="text-lg md:text-2xl font-bold text-white tracking-tight">BPSR Assist Mobile</h1>
+                <p class="text-[10px] md:text-sm text-stone-400">スタレゾの活動をスマートに記録</p>
             </div>
-            <button onclick="toggleHelp()" class="text-stone-400 hover:text-stone-600 p-2">
+            <button onclick="toggleHelp()" class="text-stone-500 hover:text-stone-300 p-2 text-xl">
                 ❓
             </button>
         </div>
     </header>
 
     <!-- Help Overlay -->
-    <div id="help-overlay" class="fixed inset-0 bg-stone-900/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4">スマホでの使い方</h3>
-            <ul class="text-sm space-y-3 text-stone-600 mb-6">
-                <li>✅ 項目をタップしてチェック！</li>
-                <li>🔄 各タブの「リセット」で一括クリア</li>
-                <li>📊 グラフで今日のプレイ傾向を確認</li>
-                <li class="pt-2 border-t font-medium text-stone-800">スマホ画面への追加:</li>
-                <li class="pl-2">ブラウザの共有メニューから「ホーム画面に追加」を選ぶと、アプリのように使えます。</li>
+    <div id="help-overlay" class="fixed inset-0 bg-stone-950/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-700">
+            <h3 class="font-bold text-lg mb-4 text-white">スマホでの使い方</h3>
+            <ul class="text-sm space-y-3 text-stone-400 mb-6">
+                <li>✅ 白い枠（タスク）をタップしてチェック！</li>
+                <li>🔄 「RESET」でそのタブのチェックを一括クリア</li>
+                <li>⏰ **自動リセット**: 毎日朝5時に日課を、月曜朝5時に週課・物資を自動でリセットします。</li>
+                <li class="pt-2 border-t border-stone-800 font-medium text-stone-200">タブ表示:</li>
+                <li class="pl-2">文字を大きく、色を明るくして操作しやすくしました。</li>
             </ul>
-            <button onclick="toggleHelp()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold">閉じる</button>
+            <button onclick="toggleHelp()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold">閉じる</button>
         </div>
     </div>
 
     <main class="flex-grow container mx-auto px-4 py-4 max-w-4xl space-y-6">
 
         <!-- Progress Overview -->
-        <section class="bg-white rounded-2xl shadow-sm p-4 border border-stone-200 overflow-hidden">
+        <section class="bg-stone-900 rounded-2xl shadow-sm p-4 border border-stone-800 overflow-hidden">
             <div class="flex flex-col md:flex-row gap-4 items-center">
-                <!-- Radar Chart Area -->
                 <div class="w-full md:w-1/2">
                     <div class="chart-container">
                         <canvas id="progressRadar"></canvas>
                     </div>
                 </div>
 
-                <!-- Progress Bars Area -->
                 <div class="w-full md:w-1/2 grid grid-cols-1 gap-3">
-                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
                         <div class="flex justify-between text-xs font-bold mb-1">
-                            <span>デイリー</span>
-                            <span id="daily-text" class="text-orange-600">0%</span>
+                            <span class="text-stone-300">デイリー達成度</span>
+                            <span id="daily-text" class="text-orange-500">0%</span>
                         </div>
-                        <div class="w-full bg-stone-200 rounded-full h-2">
+                        <div class="w-full bg-stone-800 rounded-full h-2">
                             <div id="daily-bar" class="bg-orange-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
                         <div class="flex justify-between text-xs font-bold mb-1">
-                            <span>ウィークリー</span>
-                            <span id="weekly-text" class="text-stone-600">0%</span>
+                            <span class="text-stone-300">ウィークリー達成度</span>
+                            <span id="weekly-text" class="text-stone-400">0%</span>
                         </div>
-                        <div class="w-full bg-stone-200 rounded-full h-2">
+                        <div class="w-full bg-stone-800 rounded-full h-2">
                             <div id="weekly-bar" class="bg-stone-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
                         <div class="flex justify-between text-xs font-bold mb-1">
-                            <span>物資提出</span>
-                            <span id="material-text" class="text-amber-600">0%</span>
+                            <span class="text-stone-300">物資提出状況</span>
+                            <span id="material-text" class="text-amber-500">0%</span>
                         </div>
-                        <div class="w-full bg-stone-200 rounded-full h-2">
+                        <div class="w-full bg-stone-800 rounded-full h-2">
                             <div id="material-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
@@ -130,31 +122,27 @@
             </div>
         </section>
 
-        <!-- Navigation Tabs - Sticky on Mobile -->
-        <nav class="flex bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden sticky top-[68px] z-10">
-            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-active">
+        <!-- Navigation Tabs - Improved visibility -->
+        <nav class="flex bg-stone-800 rounded-xl shadow-md border border-stone-700 overflow-hidden sticky top-[68px] z-10">
+            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
                 日課
             </button>
-            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-inactive">
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
                 週課
             </button>
-            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-3 text-center text-xs font-bold transition-all tab-inactive">
+            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
                 物資
             </button>
         </nav>
 
-        <!-- Tab Contents -->
-        <div id="content-area" class="pb-10">
-            <!-- Content injected via JS -->
-        </div>
-
+        <div id="content-area" class="pb-10"></div>
     </main>
 
     <script>
-        // --- DATA ---
         const dailyData = [
             { id: 'd_guild_att', label: 'ギルドチェックイン', desc: 'ギルドEXP・ギルド資金・ギルド活躍度', category: 'Lifestyle', icon: '🏢' },
             { id: 'd_guild_trans', label: 'ギルド輸送', desc: 'ギルドコイン・ルーノ・宝箱など', category: 'Economy', icon: '🚚' },
+            { id: 'd_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書/優待/箱/結晶', category: 'Economy', icon: '🛒' },
             { id: 'd_pioneer_req', label: '開拓局依頼', desc: 'ルーノ・名声・GC・メダル', category: 'Lifestyle', icon: '📜' },
             { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '👹' },
             { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '🛡️' },
@@ -165,27 +153,27 @@
             { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
             { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
             { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
+            { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00 開催：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
+            { id: 'd_guild_dance', label: 'ギルドダンス', desc: '金 19:30～19:55：ギルド貢献度・EXP', category: 'Lifestyle', icon: '💃', schedule: [5] }
         ];
 
         const weeklyData = [
-            { id: 'w_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書/優待/箱/結晶', category: 'Economy', icon: '🛒' },
             { id: 'w_shop_gem', label: 'カラフル(ジェム)', desc: 'ガチャコイン', category: 'Economy', icon: '💎' },
             { id: 'w_shop_friend', label: 'カラフル(友情)', desc: 'ジェム', category: 'Economy', icon: '🤝' },
-            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '奥義/ランクアップ', category: 'Economy', icon: '💳' },
+            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '御座金、ルーン合金、欠片、結晶、改鋳石、モジュール、奥義/ランクアップ', category: 'Economy', icon: '💳' },
             { id: 'w_shop_fame', label: 'カラフル(名声)', desc: 'ウィルコイン', category: 'Economy', icon: '🏅' },
-            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材/パーツ', category: 'Economy', icon: '🍂' },
+            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材、虚蝕、パワーパーツ', category: 'Economy', icon: '🍂' },
             { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
+            { id: 'w_module', label: 'モジュール', desc: '分解、交換', category: 'Economy', icon: '⚙️' },
             { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取', category: 'Economy', icon: '🏛️' },
-            { id: 'w_guild_act', label: 'ギルド活躍報酬', desc: '週次ランク確認', category: 'Lifestyle', icon: '📊' },
+            { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬、活躍度確認', category: 'Lifestyle', icon: '📊' },
             { id: 'w_regdinis', label: 'レグディニス', desc: '遺跡攻略状況', category: 'Battle', icon: '🗿' },
-            { id: 'w_hunt', label: 'ギルドハント', desc: '金〜日 開催', category: 'Battle', icon: '🏹' },
-            { id: 'w_dance', label: 'ギルドダンス', desc: '金 19:30〜', category: 'Lifestyle', icon: '💃' },
         ];
 
         const materialData = [
             { id: 'm_wood', type: '木工', req: '松材 × 40', category: 'Economy' },
             { id: 'm_cryst', type: '結晶学', req: '粘土80, 細砂80, 清らかな湧水80, 岩塩80', category: 'Economy' },
-            { id: 'm_botany', type: '植物学', req: '干し草80, 酸っぱい果実の液体80, 基質土80, 樹脂80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80, 酸っぱい果実液体80, 土80, 樹脂80', category: 'Economy' },
             { id: 'm_alch', type: '錬金', req: '謎の石の粉 × 40', category: 'Economy' },
             { id: 'm_forge', type: '鍛造', req: '鉄インゴット × 40', category: 'Economy' },
             { id: 'm_textile', type: '織物', req: '改良綿布 × 20', category: 'Economy' },
@@ -194,27 +182,85 @@
             { id: 'm_mineral', type: '鉱物学', req: '粘土80, 細砂80, 清らかな湧き水80, 金属砂80', category: 'Economy' },
         ];
 
-        // --- STATE ---
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v4')) || {
+            checked: {},
+            lastDailyReset: 0,
+            lastWeeklyReset: 0
+        };
+
         let state = {
-            checked: JSON.parse(localStorage.getItem('sr_assist_mobile_v2')) || {},
+            checked: savedState.checked || {},
+            lastDailyReset: savedState.lastDailyReset || 0,
+            lastWeeklyReset: savedState.lastWeeklyReset || 0,
             activeTab: 'daily'
         };
 
         let myChart = null;
 
-        // --- INITIALIZATION ---
+        function getLatestDailyDeadline(now) {
+            const deadline = new Date(now);
+            deadline.setHours(5, 0, 0, 0);
+            if (now < deadline) deadline.setDate(deadline.getDate() - 1);
+            return deadline.getTime();
+        }
+
+        function getLatestWeeklyDeadline(now) {
+            const deadline = new Date(now);
+            deadline.setHours(5, 0, 0, 0);
+            let day = deadline.getDay();
+            let diff = (day === 0) ? 6 : day - 1; 
+            deadline.setDate(deadline.getDate() - diff);
+            if (now < deadline) deadline.setDate(deadline.getDate() - 7);
+            return deadline.getTime();
+        }
+
+        function autoResetCheck() {
+            const now = Date.now();
+            const dailyDeadline = getLatestDailyDeadline(now);
+            const weeklyDeadline = getLatestWeeklyDeadline(now);
+            let changed = false;
+
+            if (state.lastDailyReset < dailyDeadline) {
+                Object.keys(state.checked).forEach(key => {
+                    if (key.startsWith('d_')) delete state.checked[key];
+                });
+                state.lastDailyReset = now;
+                changed = true;
+            }
+
+            if (state.lastWeeklyReset < weeklyDeadline) {
+                Object.keys(state.checked).forEach(key => {
+                    if (key.startsWith('w_') || key.startsWith('m_')) delete state.checked[key];
+                });
+                state.lastWeeklyReset = now;
+                changed = true;
+            }
+
+            if (changed) save();
+        }
+
+        function getVisibleDailyTasks() {
+            const today = new Date().getDay();
+            return dailyData.filter(task => !task.schedule || task.schedule.includes(today));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            autoResetCheck();
             initChart();
             switchTab('daily');
         });
 
         function toggleHelp() {
-            const overlay = document.getElementById('help-overlay');
-            overlay.classList.toggle('hidden');
+            document.getElementById('help-overlay').classList.toggle('hidden');
         }
 
         function save() {
-            localStorage.setItem('sr_assist_mobile_v2', JSON.stringify(state.checked));
+            const dataToSave = {
+                checked: state.checked,
+                lastDailyReset: state.lastDailyReset,
+                lastWeeklyReset: state.lastWeeklyReset
+            };
+            localStorage.setItem('sr_assist_mobile_v4', JSON.stringify(dataToSave));
         }
 
         function toggleTask(id) {
@@ -225,16 +271,15 @@
         }
 
         function resetCategory() {
-            const prefix = state.activeTab === 'daily' ? 'd_' : (state.activeTab === 'weekly' ? 'w_' : 'm_');
-            Object.keys(state.checked).forEach(key => {
-                if (key.startsWith(prefix)) delete state.checked[key];
-            });
+            const tasks = state.activeTab === 'daily' ? getVisibleDailyTasks() : (state.activeTab === 'weekly' ? weeklyData : materialData);
+            tasks.forEach(t => delete state.checked[t.id]);
             save();
             updateUI();
         }
 
         function updateUI() {
-            const d = getStats(dailyData);
+            const visibleDaily = getVisibleDailyTasks();
+            const d = getStats(visibleDaily);
             const w = getStats(weeklyData);
             const m = getStats(materialData);
 
@@ -253,14 +298,14 @@
         }
 
         function getStats(data) {
-            const total = data.length;
             const done = data.filter(item => state.checked[item.id]).length;
-            return { pct: total ? Math.round((done / total) * 100) : 0 };
+            return { pct: data.length ? Math.round((done / data.length) * 100) : 0 };
         }
 
         function getRadarValues() {
             let scores = { Battle: {d:0,t:0}, Lifestyle: {d:0,t:0}, Economy: {d:0,t:0} };
-            [...dailyData, ...weeklyData, ...materialData].forEach(item => {
+            const visibleDaily = getVisibleDailyTasks();
+            [...visibleDaily, ...weeklyData, ...materialData].forEach(item => {
                 scores[item.category].t++;
                 if (state.checked[item.id]) scores[item.category].d++;
             });
@@ -279,7 +324,7 @@
                     labels: ['バトル', '生活', '経済'],
                     datasets: [{
                         data: [0, 0, 0],
-                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.25)',
                         borderColor: 'rgb(249, 115, 22)',
                         borderWidth: 2,
                         pointRadius: 4,
@@ -294,8 +339,9 @@
                             suggestedMin: 0,
                             suggestedMax: 100,
                             ticks: { display: false, stepSize: 20 },
-                            grid: { color: '#e7e5e4' },
-                            pointLabels: { font: { size: 10, weight: 'bold' } }
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { font: { size: 10, weight: 'bold' }, color: '#a8a29e' }
                         }
                     },
                     plugins: { legend: { display: false } }
@@ -309,10 +355,10 @@
                 const btn = document.getElementById(`tab-${t}`);
                 if (t === name) {
                     btn.classList.add('tab-active');
-                    btn.classList.remove('tab-inactive', 'bg-stone-50');
+                    btn.classList.remove('text-stone-400');
                 } else {
                     btn.classList.remove('tab-active');
-                    btn.classList.add('tab-inactive', 'bg-stone-50');
+                    btn.classList.add('text-stone-400');
                 }
             });
             updateUI();
@@ -322,15 +368,18 @@
             const container = document.getElementById('content-area');
             container.innerHTML = '';
 
-            // Section Info & Reset
             const header = document.createElement('div');
             header.className = 'flex justify-between items-center py-4 animate-fade-in';
+            const days = ["日", "月", "火", "水", "木", "金", "土"];
+            const now = new Date();
+            const dateStr = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]})`;
+
             header.innerHTML = `
-                <span class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">
-                    ${state.activeTab === 'materials' ? '提出物資リスト' : 'アクティブタスク'}
+                <span class="text-[10px] font-bold text-stone-500 tracking-widest uppercase">
+                    ${state.activeTab === 'daily' ? `TODAY [${dateStr}]` : (state.activeTab === 'weekly' ? 'WEEKLY' : 'MATERIALS')}
                 </span>
-                <button onclick="resetCategory()" class="text-[10px] font-bold bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100 active:scale-95 transition-transform">
-                    リストをリセット
+                <button onclick="resetCategory()" class="text-[10px] font-bold bg-stone-900 text-stone-400 px-3 py-1 rounded-full border border-stone-800 active:scale-95 transition-transform">
+                    RESET
                 </button>
             `;
             container.appendChild(header);
@@ -342,12 +391,12 @@
                     const isChecked = state.checked[item.id];
                     grid.innerHTML += `
                         <div onclick="toggleTask('${item.id}')" 
-                            class="border rounded-2xl p-3 transition-all active:scale-95 ${isChecked ? 'bg-stone-200 border-transparent opacity-50' : 'bg-white border-stone-200'}">
+                            class="border rounded-2xl p-3 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-transparent'}">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] font-black text-stone-400 uppercase tracking-tighter">${item.type}</span>
+                                <span class="text-[9px] font-black uppercase tracking-tighter text-stone-400">${item.type}</span>
                                 <span class="text-xs">${isChecked ? '✅' : '📦'}</span>
                             </div>
-                            <p class="text-[11px] font-bold leading-tight text-stone-800">${item.req.replace(/, /g, '<br>')}</p>
+                            <p class="text-[11px] font-bold leading-tight ${isChecked ? 'text-stone-200 line-through opacity-60' : 'text-stone-800'}">${item.req.replace(/, /g, '<br>')}</p>
                         </div>
                     `;
                 });
@@ -355,18 +404,18 @@
             } else {
                 const list = document.createElement('div');
                 list.className = 'space-y-3 animate-fade-in';
-                const data = state.activeTab === 'daily' ? dailyData : weeklyData;
+                const data = state.activeTab === 'daily' ? getVisibleDailyTasks() : weeklyData;
                 data.forEach(item => {
                     const isChecked = state.checked[item.id];
                     list.innerHTML += `
                         <div onclick="toggleTask('${item.id}')" 
-                            class="flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] ${isChecked ? 'bg-stone-100 border-transparent' : 'bg-white border-stone-200 shadow-sm'}">
-                            <div class="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-xl mr-4 border border-stone-100">
+                            class="flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] shadow-md ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-transparent'}">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl mr-4 border ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
                                 ${item.icon}
                             </div>
-                            <div class="flex-1 ${isChecked ? 'line-through text-stone-400' : ''}">
-                                <h4 class="text-sm font-bold text-stone-800">${item.label}</h4>
-                                <p class="text-[10px] text-stone-500 mt-0.5">${item.desc}</p>
+                            <div class="flex-1 ${isChecked ? 'text-stone-200 line-through opacity-60' : ''}">
+                                <h4 class="text-sm font-bold ${isChecked ? 'text-white' : 'text-stone-800'}">${item.label}</h4>
+                                <p class="text-[10px] ${isChecked ? 'text-stone-300' : 'text-stone-500'} mt-0.5">${item.desc}</p>
                             </div>
                             <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-orange-500 border-orange-500' : 'border-stone-200'}">
                                 ${isChecked ? '<span class="text-white text-[10px]">✔</span>' : ''}
