@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BPSR Assist Mobile：高視認性ナビ版</title>
+    <title>BPSR Assist Mobile：50層制限＆Ultimate準備版</title>
+    <!-- 楽しい雰囲気を出すための丸文字フォント -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+
         /* タップ時のハイライトを抑制 */
         * { -webkit-tap-highlight-color: transparent; }
         
         ::-webkit-scrollbar {
             width: 6px;
         }
-        ::-webkit-scrollbar-track {
-            background: #1c1917; 
-        }
+        ::-webkit-scrollbar-track { background: #1c1917; }
         ::-webkit-scrollbar-thumb {
             background: #44403c; 
             border-radius: 10px;
@@ -32,15 +36,25 @@
             .chart-container { height: 320px; }
         }
 
-        /* ナビゲーションタブのスタイル改善 */
+        /* ナビゲーションタブのスタイル */
         .tab-active {
-            border-bottom: 4px solid #f97316;
+            border-bottom: 5px solid #f97316;
             color: #ffffff !important;
             font-weight: 800;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
         
-        /* アニメーション */
+        /* お祝いのポコポコアニメーション（新しく達成したときのみ） */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -48,89 +62,137 @@
         .animate-fade-in {
             animation: fadeIn 0.3s ease-out forwards;
         }
+
+        /* カスタムチェックボックス */
+        .custom-check {
+            appearance: none;
+            width: 1.6rem;
+            height: 1.6rem;
+            border: 3px solid #d6d3d1;
+            border-radius: 0.5rem;
+            background-color: white;
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .custom-check:checked {
+            background-color: #f97316;
+            border-color: #fb923c;
+        }
+        .custom-check:checked::before {
+            content: "✔";
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .custom-check:disabled {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* 遺跡のフロアボタン */
+        .floor-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            padding: 0.75rem 0.25rem;
+        }
+        .floor-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background-color: #44403c !important;
+            color: #78716c !important;
+        }
     </style>
 </head>
-<body class="bg-stone-950 text-stone-200 font-sans min-h-screen flex flex-col pb-10">
+<body class="bg-stone-950 text-stone-100 font-sans min-h-screen flex flex-col pb-10">
 
     <header class="bg-stone-900 shadow-lg border-b border-stone-800 sticky top-0 z-20">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-white tracking-tight">BPSR Assist Mobile</h1>
-                <p class="text-[10px] md:text-sm text-stone-400">スタレゾの活動をスマートに記録</p>
+                <h1 class="text-xl md:text-3xl font-extrabold text-white tracking-tight flex items-center">
+                    BPSR Assist <span class="text-orange-500 ml-2">Mobile</span>
+                </h1>
+                <p class="text-[10px] md:text-sm text-stone-400 font-bold">スタレゾの活動をスマートに記録</p>
             </div>
-            <button onclick="toggleHelp()" class="text-stone-500 hover:text-stone-300 p-2 text-xl">
+            <button onclick="toggleHelp()" class="bg-stone-800 text-stone-300 w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-inner border border-stone-700">
                 ❓
             </button>
         </div>
     </header>
 
     <!-- Help Overlay -->
-    <div id="help-overlay" class="fixed inset-0 bg-stone-950/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-stone-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-700">
-            <h3 class="font-bold text-lg mb-4 text-white">スマホでの使い方</h3>
-            <ul class="text-sm space-y-3 text-stone-400 mb-6">
-                <li>✅ 白い枠（タスク）をタップしてチェック！</li>
-                <li>🔄 「RESET」でそのタブのチェックを一括クリア</li>
-                <li>⏰ **自動リセット**: 毎日朝5時に日課を、月曜朝5時に週課・物資を自動でリセットします。</li>
-                <li class="pt-2 border-t border-stone-800 font-medium text-stone-200">タブ表示:</li>
-                <li class="pl-2">文字を大きく、色を明るくして操作しやすくしました。</li>
+    <div id="help-overlay" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-900 rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-stone-700 animate-fade-in">
+            <h3 class="font-extrabold text-2xl mb-4 text-white">遺跡＆レイドの状況</h3>
+            <ul class="text-sm space-y-4 text-stone-300 mb-8 font-bold">
+                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">🗿</span><span>**レグディニス**: 現在は50層までクリア可能！51層以降は準備中です。</span></li>
+                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">🐉</span><span>**浮島レイド**: アルティメット難易度が追加（近日公開予定）！</span></li>
+                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">✨</span><span>達成した瞬間、ポコッと弾けるお祝い演出付き。</span></li>
             </ul>
-            <button onclick="toggleHelp()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold">閉じる</button>
+            <button onclick="toggleHelp()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg">閉じる</button>
         </div>
     </div>
 
     <main class="flex-grow container mx-auto px-4 py-4 max-w-4xl space-y-6">
 
         <!-- Progress Overview -->
-        <section class="bg-stone-900 rounded-2xl shadow-sm p-4 border border-stone-800 overflow-hidden">
-            <div class="flex flex-col md:flex-row gap-4 items-center">
+        <section class="bg-stone-900 rounded-3xl shadow-sm p-4 border border-stone-800 overflow-hidden">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
                 <div class="w-full md:w-1/2">
                     <div class="chart-container">
                         <canvas id="progressRadar"></canvas>
                     </div>
                 </div>
 
-                <div class="w-full md:w-1/2 grid grid-cols-1 gap-3">
-                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
-                        <div class="flex justify-between text-xs font-bold mb-1">
-                            <span class="text-stone-300">デイリー達成度</span>
-                            <span id="daily-text" class="text-orange-500">0%</span>
+                <div class="w-full md:w-1/2 grid grid-cols-1 gap-4">
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">DAILY PROGRESS</span>
+                            <span id="daily-text" class="text-orange-500 text-lg">0%</span>
                         </div>
-                        <div class="w-full bg-stone-800 rounded-full h-2">
-                            <div id="daily-bar" class="bg-orange-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
-                        <div class="flex justify-between text-xs font-bold mb-1">
-                            <span class="text-stone-300">ウィークリー達成度</span>
-                            <span id="weekly-text" class="text-stone-400">0%</span>
-                        </div>
-                        <div class="w-full bg-stone-800 rounded-full h-2">
-                            <div id="weekly-bar" class="bg-stone-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="daily-bar" class="bg-orange-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="bg-stone-950/50 p-3 rounded-xl border border-stone-800">
-                        <div class="flex justify-between text-xs font-bold mb-1">
-                            <span class="text-stone-300">物資提出状況</span>
-                            <span id="material-text" class="text-amber-500">0%</span>
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">WEEKLY PROGRESS</span>
+                            <span id="weekly-text" class="text-stone-300 text-lg">0%</span>
                         </div>
-                        <div class="w-full bg-stone-800 rounded-full h-2">
-                            <div id="material-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="weekly-bar" class="bg-stone-300 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">MATERIALS SUBMISSION</span>
+                            <span id="material-text" class="text-amber-500 text-lg">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Navigation Tabs - Improved visibility -->
-        <nav class="flex bg-stone-800 rounded-xl shadow-md border border-stone-700 overflow-hidden sticky top-[68px] z-10">
-            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
+        <!-- Navigation Tabs -->
+        <nav class="flex bg-stone-800 rounded-2xl shadow-xl border border-stone-700 overflow-hidden sticky top-[76px] z-10 p-1">
+            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
                 日課
             </button>
-            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
                 週課
             </button>
-            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-4 text-center text-base font-bold transition-all text-stone-400">
+            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
                 物資
             </button>
         </nav>
@@ -142,60 +204,76 @@
         const dailyData = [
             { id: 'd_guild_att', label: 'ギルドチェックイン', desc: 'ギルドEXP・ギルド資金・ギルド活躍度', category: 'Lifestyle', icon: '🏢' },
             { id: 'd_guild_trans', label: 'ギルド輸送', desc: 'ギルドコイン・ルーノ・宝箱など', category: 'Economy', icon: '🚚' },
-            { id: 'd_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書/優待/箱/結晶', category: 'Economy', icon: '🛒' },
+            { id: 'd_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書・優待・箱・結晶', category: 'Economy', icon: '🛒' },
             { id: 'd_pioneer_req', label: '開拓局依頼', desc: 'ルーノ・名声・GC・メダル', category: 'Lifestyle', icon: '📜' },
-            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '👹' },
-            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化/ウィル回収', category: 'Battle', icon: '🛡️' },
-            { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材、ホームEXP、ホームコイン、ホーム肥料', category: 'Lifestyle', icon: '🏠' },
+            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '👹' },
+            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '🛡️' },
+            { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材・ホームEXP・ホームコイン・ホーム肥料', category: 'Lifestyle', icon: '🏠' },
             { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
             { id: 'd_alch_exp', label: '錬金実験', desc: '10EXP×5・玩具花火', category: 'Lifestyle', icon: '⚗️' },
             { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
             { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
             { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
             { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
-            { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00 開催：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
+            { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
             { id: 'd_guild_dance', label: 'ギルドダンス', desc: '金 19:30～19:55：ギルド貢献度・EXP', category: 'Lifestyle', icon: '💃', schedule: [5] }
         ];
 
         const weeklyData = [
             { id: 'w_shop_gem', label: 'カラフル(ジェム)', desc: 'ガチャコイン', category: 'Economy', icon: '💎' },
             { id: 'w_shop_friend', label: 'カラフル(友情)', desc: 'ジェム', category: 'Economy', icon: '🤝' },
-            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '御座金、ルーン合金、欠片、結晶、改鋳石、モジュール、奥義/ランクアップ', category: 'Economy', icon: '💳' },
+            { id: 'w_shop_gc', label: 'カラフル(GC)', desc: '御座金・ルーン合金・欠片・結晶・改鋳石・モジュール・奥義・ランクアップ', category: 'Economy', icon: '💳' },
             { id: 'w_shop_fame', label: 'カラフル(名声)', desc: 'ウィルコイン', category: 'Economy', icon: '🏅' },
-            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材、虚蝕、パワーパーツ', category: 'Economy', icon: '🍂' },
+            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材・虚蝕・パワーパーツ', category: 'Economy', icon: '🍂' },
             { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
-            { id: 'w_module', label: 'モジュール', desc: '分解、交換', category: 'Economy', icon: '⚙️' },
+            { id: 'w_module', label: 'モジュール', desc: '分解・交換', category: 'Economy', icon: '⚙️' },
             { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取', category: 'Economy', icon: '🏛️' },
-            { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬、活躍度確認', category: 'Lifestyle', icon: '📊' },
-            { id: 'w_regdinis', label: 'レグディニス', desc: '遺跡攻略状況', category: 'Battle', icon: '🗿' },
+            { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬・活躍度確認', category: 'Lifestyle', icon: '📊' },
+            { id: 'w_floating_raid', label: '浮島レイド(神竜の枷)', desc: '全竜 Easy & Hard 制覇', category: 'Battle', icon: '🐉', isComplex: true },
+            { id: 'w_regdinis', label: 'レグディニス遺跡', desc: 'タワー攻略状況', category: 'Battle', icon: '🗿', isRuins: true },
         ];
 
         const materialData = [
-            { id: 'm_wood', type: '木工', req: '松材 × 40', category: 'Economy' },
-            { id: 'm_cryst', type: '結晶学', req: '粘土80, 細砂80, 清らかな湧水80, 岩塩80', category: 'Economy' },
-            { id: 'm_botany', type: '植物学', req: '干し草80, 酸っぱい果実液体80, 土80, 樹脂80', category: 'Economy' },
-            { id: 'm_alch', type: '錬金', req: '謎の石の粉 × 40', category: 'Economy' },
-            { id: 'm_forge', type: '鍛造', req: '鉄インゴット × 40', category: 'Economy' },
-            { id: 'm_textile', type: '織物', req: '改良綿布 × 20', category: 'Economy' },
-            { id: 'm_craft', type: '工芸', req: '砂岩の砥石 × 40', category: 'Economy' },
-            { id: 'm_cook', type: '料理', req: '小麦粉 × 45', category: 'Economy' },
-            { id: 'm_mineral', type: '鉱物学', req: '粘土80, 細砂80, 清らかな湧き水80, 金属砂80', category: 'Economy' },
+            { id: 'm_wood', type: '木工', req: '松材・40', category: 'Economy' },
+            { id: 'm_cryst', type: '結晶学', req: '粘土80・細砂80・清らかな湧水80・岩塩80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・基質土80・樹脂80', category: 'Economy' },
+            { id: 'm_alch', type: '錬金', req: '謎の石の粉・40', category: 'Economy' },
+            { id: 'm_forge', type: '鍛造', req: '鉄インゴット・40', category: 'Economy' },
+            { id: 'm_textile', type: '織物', req: '改良綿布・20', category: 'Economy' },
+            { id: 'm_craft', type: '工芸', req: '砂岩の砥石・40', category: 'Economy' },
+            { id: 'm_cook', type: '料理', req: '小麦粉・45', category: 'Economy' },
+            { id: 'm_mineral', type: '鉱物学', req: '粘土80・細砂80・清らかな湧き水80・金属砂80', category: 'Economy' },
         ];
 
-        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v4')) || {
+        // --- STATE ---
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v5')) || {
             checked: {},
             lastDailyReset: 0,
-            lastWeeklyReset: 0
+            lastWeeklyReset: 0,
+            regdinisFloor: 0
         };
 
         let state = {
             checked: savedState.checked || {},
             lastDailyReset: savedState.lastDailyReset || 0,
             lastWeeklyReset: savedState.lastWeeklyReset || 0,
-            activeTab: 'daily'
+            regdinisFloor: savedState.regdinisFloor || 0,
+            activeTab: 'daily',
+            lastClickedId: null 
         };
 
         let myChart = null;
+
+        // --- UTILS ---
+        function save() {
+            const dataToSave = {
+                checked: state.checked,
+                lastDailyReset: state.lastDailyReset,
+                lastWeeklyReset: state.lastWeeklyReset,
+                regdinisFloor: state.regdinisFloor
+            };
+            localStorage.setItem('sr_assist_mobile_v5', JSON.stringify(dataToSave));
+        }
 
         function getLatestDailyDeadline(now) {
             const deadline = new Date(now);
@@ -232,6 +310,7 @@
                 Object.keys(state.checked).forEach(key => {
                     if (key.startsWith('w_') || key.startsWith('m_')) delete state.checked[key];
                 });
+                state.regdinisFloor = 0;
                 state.lastWeeklyReset = now;
                 changed = true;
             }
@@ -244,6 +323,7 @@
             return dailyData.filter(task => !task.schedule || task.schedule.includes(today));
         }
 
+        // --- CORE LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
             autoResetCheck();
             initChart();
@@ -254,25 +334,77 @@
             document.getElementById('help-overlay').classList.toggle('hidden');
         }
 
-        function save() {
-            const dataToSave = {
-                checked: state.checked,
-                lastDailyReset: state.lastDailyReset,
-                lastWeeklyReset: state.lastWeeklyReset
-            };
-            localStorage.setItem('sr_assist_mobile_v4', JSON.stringify(dataToSave));
+        function toggleTask(id) {
+            state.lastClickedId = id;
+            if (state.checked[id]) {
+                delete state.checked[id];
+                state.lastClickedId = null;
+            } else {
+                state.checked[id] = true;
+            }
+            save();
+            updateUI();
         }
 
-        function toggleTask(id) {
-            if (state.checked[id]) delete state.checked[id];
-            else state.checked[id] = true;
+        function toggleSubRaid(subId) {
+            const fullId = `w_raid_${subId}`;
+            state.lastClickedId = fullId;
+            if (state.checked[fullId]) {
+                delete state.checked[fullId];
+                state.lastClickedId = null;
+            } else {
+                state.checked[fullId] = true;
+            }
+            
+            const dragons = ['ice', 'dark', 'light'];
+            const allCleared = dragons.every(d => state.checked[`w_raid_${d}_easy`] && state.checked[`w_raid_${d}_hard`]);
+            
+            if (allCleared) {
+                if (!state.checked['w_floating_raid']) state.lastClickedId = 'w_floating_raid';
+                state.checked['w_floating_raid'] = true;
+            } else {
+                delete state.checked['w_floating_raid'];
+            }
+            
+            save();
+            updateUI();
+        }
+
+        function setRegdinisFloor(floor) {
+            if (floor > 50) return; 
+
+            if (state.regdinisFloor === floor) {
+                state.regdinisFloor = Math.max(0, floor - 5);
+            } else {
+                state.regdinisFloor = floor;
+            }
+            
+            state.lastClickedId = 'w_regdinis';
+            if (state.regdinisFloor >= 50) state.checked['w_regdinis'] = true;
+            else delete state.checked['w_regdinis'];
             save();
             updateUI();
         }
 
         function resetCategory() {
-            const tasks = state.activeTab === 'daily' ? getVisibleDailyTasks() : (state.activeTab === 'weekly' ? weeklyData : materialData);
-            tasks.forEach(t => delete state.checked[t.id]);
+            state.lastClickedId = null;
+            if (state.activeTab === 'daily') {
+                getVisibleDailyTasks().forEach(t => delete state.checked[t.id]);
+            } else if (state.activeTab === 'weekly') {
+                weeklyData.forEach(t => {
+                    delete state.checked[t.id];
+                    if (t.isComplex) {
+                        ['ice', 'dark', 'light'].forEach(d => {
+                            delete state.checked[`w_raid_${d}_easy`];
+                            delete state.checked[`w_raid_${d}_hard`];
+                            delete state.checked[`w_raid_${d}_ultimate`];
+                        });
+                    }
+                });
+                state.regdinisFloor = 0;
+            } else {
+                materialData.forEach(t => delete state.checked[t.id]);
+            }
             save();
             updateUI();
         }
@@ -298,16 +430,24 @@
         }
 
         function getStats(data) {
-            const done = data.filter(item => state.checked[item.id]).length;
+            const done = data.filter(item => {
+                if (item.isRuins) return state.regdinisFloor >= 50;
+                return state.checked[item.id];
+            }).length;
             return { pct: data.length ? Math.round((done / data.length) * 100) : 0 };
         }
 
         function getRadarValues() {
             let scores = { Battle: {d:0,t:0}, Lifestyle: {d:0,t:0}, Economy: {d:0,t:0} };
             const visibleDaily = getVisibleDailyTasks();
-            [...visibleDaily, ...weeklyData, ...materialData].forEach(item => {
+            const all = [...visibleDaily, ...weeklyData, ...materialData];
+            all.forEach(item => {
                 scores[item.category].t++;
-                if (state.checked[item.id]) scores[item.category].d++;
+                if (item.isRuins) {
+                    if (state.regdinisFloor >= 50) scores[item.category].d++;
+                } else {
+                    if (state.checked[item.id]) scores[item.category].d++;
+                }
             });
             return [
                 scores.Battle.t ? (scores.Battle.d / scores.Battle.t) * 100 : 0,
@@ -324,11 +464,12 @@
                     labels: ['バトル', '生活', '経済'],
                     datasets: [{
                         data: [0, 0, 0],
-                        backgroundColor: 'rgba(249, 115, 22, 0.25)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.35)',
                         borderColor: 'rgb(249, 115, 22)',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgb(249, 115, 22)'
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: 'rgb(249, 115, 22)',
+                        pointBorderColor: '#fff'
                     }]
                 },
                 options: {
@@ -339,9 +480,12 @@
                             suggestedMin: 0,
                             suggestedMax: 100,
                             ticks: { display: false, stepSize: 20 },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                            pointLabels: { font: { size: 10, weight: 'bold' }, color: '#a8a29e' }
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { 
+                                font: { size: 14, weight: 'bold', family: "'M PLUS Rounded 1c'" },
+                                color: '#d6d3d1' 
+                            }
                         }
                     },
                     plugins: { legend: { display: false } }
@@ -351,6 +495,7 @@
 
         function switchTab(name) {
             state.activeTab = name;
+            state.lastClickedId = null;
             ['daily', 'weekly', 'materials'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 if (t === name) {
@@ -375,56 +520,159 @@
             const dateStr = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]})`;
 
             header.innerHTML = `
-                <span class="text-[10px] font-bold text-stone-500 tracking-widest uppercase">
-                    ${state.activeTab === 'daily' ? `TODAY [${dateStr}]` : (state.activeTab === 'weekly' ? 'WEEKLY' : 'MATERIALS')}
+                <span class="text-xs font-black text-stone-500 tracking-widest uppercase font-bold">
+                    ${state.activeTab === 'daily' ? `Adventure Log [${dateStr}]` : (state.activeTab === 'weekly' ? 'Weekly Milestone' : 'Material Check')}
                 </span>
-                <button onclick="resetCategory()" class="text-[10px] font-bold bg-stone-900 text-stone-400 px-3 py-1 rounded-full border border-stone-800 active:scale-95 transition-transform">
-                    RESET
+                <button onclick="resetCategory()" class="text-[10px] font-black bg-stone-900 text-stone-500 px-4 py-2 rounded-full border border-stone-800 active:scale-95 transition-all">
+                    RELOAD LIST
                 </button>
             `;
             container.appendChild(header);
 
-            if (state.activeTab === 'materials') {
-                const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-2 gap-3 animate-fade-in';
-                materialData.forEach(item => {
-                    const isChecked = state.checked[item.id];
-                    grid.innerHTML += `
-                        <div onclick="toggleTask('${item.id}')" 
-                            class="border rounded-2xl p-3 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-transparent'}">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] font-black uppercase tracking-tighter text-stone-400">${item.type}</span>
-                                <span class="text-xs">${isChecked ? '✅' : '📦'}</span>
-                            </div>
-                            <p class="text-[11px] font-bold leading-tight ${isChecked ? 'text-stone-200 line-through opacity-60' : 'text-stone-800'}">${item.req.replace(/, /g, '<br>')}</p>
-                        </div>
-                    `;
-                });
-                container.appendChild(grid);
-            } else {
-                const list = document.createElement('div');
-                list.className = 'space-y-3 animate-fade-in';
-                const data = state.activeTab === 'daily' ? getVisibleDailyTasks() : weeklyData;
-                data.forEach(item => {
-                    const isChecked = state.checked[item.id];
-                    list.innerHTML += `
-                        <div onclick="toggleTask('${item.id}')" 
-                            class="flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] shadow-md ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-transparent'}">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl mr-4 border ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+            const list = document.createElement('div');
+            list.className = 'space-y-4 animate-fade-in';
+            const data = state.activeTab === 'daily' ? getVisibleDailyTasks() : (state.activeTab === 'weekly' ? weeklyData : materialData);
+
+            data.forEach(item => {
+                const isChecked = state.checked[item.id] || (item.isRuins && state.regdinisFloor >= 50);
+                const isNew = state.lastClickedId === item.id;
+
+                if (item.isComplex) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let content = `
+                        <div class="flex items-center mb-6">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
                                 ${item.icon}
                             </div>
-                            <div class="flex-1 ${isChecked ? 'text-stone-200 line-through opacity-60' : ''}">
-                                <h4 class="text-sm font-bold ${isChecked ? 'text-white' : 'text-stone-800'}">${item.label}</h4>
-                                <p class="text-[10px] ${isChecked ? 'text-stone-300' : 'text-stone-500'} mt-0.5">${item.desc}</p>
+                            <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                                <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
                             </div>
-                            <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-orange-500 border-orange-500' : 'border-stone-200'}">
-                                ${isChecked ? '<span class="text-white text-[10px]">✔</span>' : ''}
+                            <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
                             </div>
                         </div>
+                        <div class="grid grid-cols-3 gap-2 mt-2">
                     `;
-                });
-                container.appendChild(list);
-            }
+
+                    ['ice', 'dark', 'light'].forEach(dId => {
+                        const dName = dId === 'ice' ? '氷竜' : dId === 'dark' ? '闇竜' : '光竜';
+                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`];
+                        const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard`;
+
+                        content += `
+                            <div class="${dragonCleared ? 'bg-orange-100 border-orange-200' : 'bg-stone-50 border-stone-100'} p-2 rounded-2xl border flex flex-col items-center transition-all ${isDragonNew && dragonCleared ? 'animate-pop' : ''}">
+                                <span class="text-sm font-black text-stone-900 mb-3">${dName}</span>
+                                <div class="flex flex-col gap-3 w-full">
+                                    <label class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-stone-500">Easy</span>
+                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_easy`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_easy')">
+                                    </label>
+                                    <label class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-stone-500">Hard</span>
+                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_hard`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_hard')">
+                                    </label>
+                                    <label class="flex items-center justify-between gap-1 opacity-40">
+                                        <span class="text-[10px] font-bold text-stone-700">Ult</span>
+                                        <div class="w-6 h-6 rounded flex items-center justify-center bg-stone-200 text-[10px] text-stone-500">🔒</div>
+                                    </label>
+                                </div>
+                                ${dragonCleared ? '<div class="mt-2 text-[8px] text-orange-600 font-black animate-pop tracking-tighter">COMPLETE！</div>' : ''}
+                            </div>
+                        `;
+                    });
+                    content += `</div>`;
+                    card.innerHTML = content;
+                    list.appendChild(card);
+
+                } else if (item.isRuins) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border shadow-xl transition-all ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let gridHtml = `<div class="grid grid-cols-1 gap-3 mt-6">`;
+                    for (let i = 0; i < 60; i += 5) {
+                        const start = i + 1;
+                        const end = i + 4;
+                        const boss = i + 5;
+                        
+                        const isPreparation = boss > 50; 
+                        const rangeDone = state.regdinisFloor >= end;
+                        const bossDone = state.regdinisFloor >= boss;
+
+                        gridHtml += `
+                            <div class="flex gap-2">
+                                <button onclick="setRegdinisFloor(${end})" ${isPreparation ? 'disabled' : ''}
+                                    class="floor-btn flex-1 ${rangeDone ? 'bg-orange-500 text-white shadow-md' : 'bg-stone-100 text-stone-500'}">
+                                    ${start}-${end}
+                                </button>
+                                <button onclick="setRegdinisFloor(${boss})" ${isPreparation ? 'disabled' : ''}
+                                    class="floor-btn w-20 ${bossDone ? 'bg-orange-600 text-white shadow-md' : 'bg-stone-200 text-stone-700'} border-2 ${bossDone ? 'border-orange-400' : 'border-stone-300'}">
+                                    ${boss} <span class="ml-1 text-[10px]">${bossDone ? '👑' : (isPreparation ? '🚧' : '')}</span>
+                                </button>
+                            </div>
+                        `;
+                    }
+                    gridHtml += `</div>`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                    ${item.icon}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">最高：${state.regdinisFloor}層クリア（50層まで実装中）</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                ${isChecked ? '<span class="text-orange-500 font-black text-lg animate-pop">COMPLETE！</span>' : ''}
+                            </div>
+                        </div>
+                        ${gridHtml}
+                    `;
+                    list.appendChild(card);
+
+                } else if (state.activeTab === 'materials') {
+                    const mCard = document.createElement('div');
+                    mCard.onclick = () => toggleTask(item.id);
+                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-transparent'} ${isNew ? 'animate-pop' : ''}`;
+                    mCard.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-black uppercase text-stone-400 font-bold">${item.type}</span>
+                            <span class="text-xl">${isChecked ? '✅' : '📦'}</span>
+                        </div>
+                        <p class="text-[11px] font-black leading-tight ${isChecked ? 'text-stone-200 line-through' : 'text-stone-800'} font-bold">${item.req}</p>
+                    `;
+                    if (!container.querySelector('.material-grid')) {
+                        const mGrid = document.createElement('div');
+                        mGrid.className = 'grid grid-cols-2 gap-4 material-grid';
+                        list.appendChild(mGrid);
+                    }
+                    list.querySelector('.material-grid').appendChild(mCard);
+
+                } else {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.onclick = () => toggleTask(item.id);
+                    itemDiv.className = `flex items-center p-5 rounded-3xl border transition-all active:scale-[0.98] shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    itemDiv.innerHTML = `
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                            ${item.icon}
+                        </div>
+                        <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                            <h4 class="text-sm font-bold ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                            <p class="text-[10px] ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                            ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                        </div>
+                    `;
+                    list.appendChild(itemDiv);
+                }
+            });
+            container.appendChild(list);
         }
     </script>
 </body>
