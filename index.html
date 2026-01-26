@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BPSR Assist Mobile：50層制限＆Ultimate準備版</title>
+    <title>BPSR Assist Mobile：ご利用ガイド更新版</title>
     <!-- 楽しい雰囲気を出すための丸文字フォント -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,7 +45,7 @@
             transform: translateY(-2px);
         }
         
-        /* お祝いのポコポコアニメーション（新しく達成したときのみ） */
+        /* お祝いのポコポコアニメーション */
         @keyframes pop {
             0% { transform: scale(1); }
             50% { transform: scale(1.08); }
@@ -53,6 +53,15 @@
         }
         .animate-pop {
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 警告アニメーション */
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); color: #ef4444; }
+            50% { transform: scale(1.1); color: #f87171; }
+        }
+        .animate-max {
+            animation: pulse-red 1s infinite;
         }
 
         @keyframes fadeIn {
@@ -71,8 +80,7 @@
             border: 3px solid #d6d3d1;
             border-radius: 0.5rem;
             background-color: white;
-            display: inline-grid;
-            place-content: center;
+            display: inline-grid; place-content: center;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -110,6 +118,10 @@
             background-color: #44403c !important;
             color: #78716c !important;
         }
+
+        .key-slot {
+            transition: all 0.2s;
+        }
     </style>
 </head>
 <body class="bg-stone-950 text-stone-100 font-sans min-h-screen flex flex-col pb-10">
@@ -130,14 +142,43 @@
 
     <!-- Help Overlay -->
     <div id="help-overlay" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-stone-900 rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-stone-700 animate-fade-in">
-            <h3 class="font-extrabold text-2xl mb-4 text-white">遺跡＆レイドの状況</h3>
-            <ul class="text-sm space-y-4 text-stone-300 mb-8 font-bold">
-                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">🗿</span><span>**レグディニス**: 現在は50層までクリア可能！51層以降は準備中です。</span></li>
-                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">🐉</span><span>**浮島レイド**: アルティメット難易度が追加（近日公開予定）！</span></li>
-                <li class="flex items-start"><span class="text-orange-500 mr-2 text-lg">✨</span><span>達成した瞬間、ポコッと弾けるお祝い演出付き。</span></li>
-            </ul>
-            <button onclick="toggleHelp()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg">閉じる</button>
+        <div class="bg-stone-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-700 animate-fade-in flex flex-col max-h-[90vh]">
+            <h3 class="font-extrabold text-xl mb-4 text-white text-center border-b border-stone-800 pb-2">📜 使い方ガイド</h3>
+            
+            <div class="overflow-y-auto pr-2 space-y-5 text-sm text-stone-300 scrollbar-thin">
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">🔘 基本の記録</h4>
+                    <p>枠をタップしてチェック！やり残しがないように確認！</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">⏰ 朝5時の自動更新</h4>
+                    <p>・日課：毎日朝5時にリセット<br>
+                       ・週課・物資：月曜朝5時にリセット<br>
+                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。</p> 
+                <section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">🔑 鍵の管理</h4>
+                    <p>ボス・精鋭の鍵本数をタップで記録。ストック本数は日課をリセットしても維持されます。6本たまると「⚠️ MAX!!」でお知らせ！</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">♜ 遺跡とレイド</h4>
+                    <p>・レグディニス遺跡：クリアした階をタップすれば、それまでの階を一括チェック！<br>
+                       ・浮島レイド：3種の竜のEasy/Hardを制覇するとカード全体が完了します。</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">📊 グラフと進捗</h4>
+                    <p>上のレーダーグラフで「今日の活動バランス」が分かります。まんべんなく埋めて最強の冒険者を目指しましょう！</p>
+                </section>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                <button onclick="toggleHelp()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black text-lg shadow-lg">OK、わかった！</button>
+                <p class="text-[10px] text-stone-500 text-center font-bold tracking-widest">©かべるね</p>
+            </div>
         </div>
     </div>
 
@@ -177,7 +218,7 @@
                             <span id="material-text" class="text-amber-500 text-lg">0%</span>
                         </div>
                         <div class="w-full bg-stone-800 rounded-full h-3">
-                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -206,14 +247,14 @@
             { id: 'd_guild_trans', label: 'ギルド輸送', desc: 'ギルドコイン・ルーノ・宝箱など', category: 'Economy', icon: '🚚' },
             { id: 'd_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書・優待・箱・結晶', category: 'Economy', icon: '🛒' },
             { id: 'd_pioneer_req', label: '開拓局依頼', desc: 'ルーノ・名声・GC・メダル', category: 'Lifestyle', icon: '📜' },
-            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '👹' },
-            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '🛡️' },
+            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '👹', isKeyTask: true },
+            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '🛡️', isKeyTask: true },
             { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材・ホームEXP・ホームコイン・ホーム肥料', category: 'Lifestyle', icon: '🏠' },
             { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
             { id: 'd_alch_exp', label: '錬金実験', desc: '10EXP×5・玩具花火', category: 'Lifestyle', icon: '⚗️' },
             { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
             { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
-            { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
+            { id: 'd_focus', label: 'フォーカス消費', desc: '400・日・上限2000', category: 'Lifestyle', icon: '⚡' },
             { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
             { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
             { id: 'd_guild_dance', label: 'ギルドダンス', desc: '金 19:30～19:55：ギルド貢献度・EXP', category: 'Lifestyle', icon: '💃', schedule: [5] }
@@ -224,10 +265,10 @@
             { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材・虚蝕・パワーパーツ', category: 'Economy', icon: '🍂' },
             { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
             { id: 'w_module', label: 'モジュール', desc: '分解・交換', category: 'Economy', icon: '⚙️' },
-            { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取', category: 'Economy', icon: '🏛️' },
+            { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取・装備：月曜朝5時の時点の職', category: 'Economy', icon: '🏛️' },
             { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬・活躍度確認', category: 'Lifestyle', icon: '📊' },
             { id: 'w_floating_raid', label: '浮島レイド(神竜の枷)', desc: '全竜 Easy & Hard 制覇', category: 'Battle', icon: '🐉', isComplex: true },
-            { id: 'w_regdinis', label: 'レグディニス遺跡', desc: 'タワー攻略状況', category: 'Battle', icon: '🗿', isRuins: true },
+            { id: 'w_regdinis', label: 'レグディニス遺跡', desc: 'タワー攻略状況', category: 'Battle', icon: '♜', isRuins: true },
         ];
 
         const materialData = [
@@ -243,11 +284,13 @@
         ];
 
         // --- STATE ---
-        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v5')) || {
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v7')) || {
             checked: {},
             lastDailyReset: 0,
             lastWeeklyReset: 0,
-            regdinisFloor: 0
+            regdinisFloor: 0,
+            bossKeyCount: 0,
+            eliteKeyCount: 0
         };
 
         let state = {
@@ -255,6 +298,8 @@
             lastDailyReset: savedState.lastDailyReset || 0,
             lastWeeklyReset: savedState.lastWeeklyReset || 0,
             regdinisFloor: savedState.regdinisFloor || 0,
+            bossKeyCount: savedState.bossKeyCount || 0,
+            eliteKeyCount: savedState.eliteKeyCount || 0,
             activeTab: 'daily',
             lastClickedId: null 
         };
@@ -267,9 +312,11 @@
                 checked: state.checked,
                 lastDailyReset: state.lastDailyReset,
                 lastWeeklyReset: state.lastWeeklyReset,
-                regdinisFloor: state.regdinisFloor
+                regdinisFloor: state.regdinisFloor,
+                bossKeyCount: state.bossKeyCount,
+                eliteKeyCount: state.eliteKeyCount
             };
-            localStorage.setItem('sr_assist_mobile_v5', JSON.stringify(dataToSave));
+            localStorage.setItem('sr_assist_mobile_v7', JSON.stringify(dataToSave));
         }
 
         function getLatestDailyDeadline(now) {
@@ -296,10 +343,17 @@
             let changed = false;
 
             if (state.lastDailyReset < dailyDeadline) {
+                const diffTime = dailyDeadline - state.lastDailyReset;
+                const daysPassed = Math.max(1, Math.floor(diffTime / (24 * 60 * 60 * 1000)));
+
                 Object.keys(state.checked).forEach(key => {
                     if (key.startsWith('d_')) delete state.checked[key];
                 });
-                state.lastDailyReset = now;
+
+                state.bossKeyCount = Math.min(6, state.bossKeyCount + (daysPassed * 2));
+                state.eliteKeyCount = Math.min(6, state.eliteKeyCount + (daysPassed * 2));
+
+                state.lastDailyReset = dailyDeadline;
                 changed = true;
             }
 
@@ -308,7 +362,7 @@
                     if (key.startsWith('w_') || key.startsWith('m_')) delete state.checked[key];
                 });
                 state.regdinisFloor = 0;
-                state.lastWeeklyReset = now;
+                state.lastWeeklyReset = weeklyDeadline;
                 changed = true;
             }
 
@@ -328,7 +382,8 @@
         });
 
         function toggleHelp() {
-            document.getElementById('help-overlay').classList.toggle('hidden');
+            const el = document.getElementById('help-overlay');
+            el.classList.toggle('hidden');
         }
 
         function toggleTask(id) {
@@ -387,6 +442,13 @@
                 delete state.checked['w_shop_colorful'];
             }
             
+            save();
+            updateUI();
+        }
+
+        function setKeyStock(taskId, count) {
+            if (taskId === 'd_boss_hunt') state.bossKeyCount = count;
+            if (taskId === 'd_elite_hunt') state.eliteKeyCount = count;
             save();
             updateUI();
         }
@@ -582,13 +644,17 @@
                     `;
 
                     ['ice', 'dark', 'light'].forEach(dId => {
-                        const dName = dId === 'ice' ? '氷竜' : dId === 'dark' ? '闇竜' : '光竜';
+                        let dName = ""; let dIcon = "";
+                        if(dId === 'ice') { dName = "氷竜"; dIcon = "❄️"; }
+                        else if(dId === 'dark') { dName = "闇竜"; dIcon = "🌑"; }
+                        else { dName = "光竜"; dIcon = "✨"; }
+
                         const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`];
                         const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard`;
 
                         content += `
                             <div class="${dragonCleared ? 'bg-orange-100 border-orange-200' : 'bg-stone-50 border-stone-100'} p-2 rounded-2xl border flex flex-col items-center transition-all ${isDragonNew && dragonCleared ? 'animate-pop' : ''}">
-                                <span class="text-sm font-black text-stone-900 mb-3">${dName}</span>
+                                <span class="text-sm font-black text-stone-900 mb-3">${dIcon}${dName}</span>
                                 <div class="flex flex-col gap-3 w-full">
                                     <label class="flex items-center justify-between gap-1">
                                         <span class="text-[10px] font-bold text-stone-500">Easy</span>
@@ -609,6 +675,53 @@
                     });
                     content += `</div>`;
                     card.innerHTML = content;
+                    list.appendChild(card);
+
+                } else if (item.isKeyTask) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent animate-pop' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    const currentStock = item.id === 'd_boss_hunt' ? state.bossKeyCount : state.eliteKeyCount;
+
+                    let keyHtml = `<div class="flex justify-between mt-4 gap-1 px-1">`;
+                    keyHtml += `
+                        <button onclick="setKeyStock('${item.id}', 0)" 
+                            class="key-slot flex-[1.5] py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${currentStock === 0 ? 'bg-orange-500 border-orange-400 shadow-md' : 'bg-stone-50 border-stone-100'}">
+                            <span class="text-[10px] font-black ${currentStock === 0 ? 'text-white' : 'text-stone-400'}">None</span>
+                        </button>
+                    `;
+                    for (let k = 1; k <= 6; k++) {
+                        const isActive = currentStock >= k; 
+                        const isExact = currentStock === k;
+                        keyHtml += `
+                            <button onclick="setKeyStock('${item.id}', ${k})" 
+                                class="key-slot flex-1 py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${isActive ? 'bg-orange-500 border-orange-400 shadow-sm' : 'bg-stone-50 border-stone-100'} ${isExact ? 'scale-110 z-10' : ''}">
+                                <span class="text-sm">${isActive ? '🔑' : '⚪'}</span>
+                                <span class="text-[8px] font-black mt-0.5 ${isActive ? 'text-white' : 'text-stone-400'}">${k}</span>
+                            </button>
+                        `;
+                    }
+                    keyHtml += `</div>`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                    ${item.icon}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">
+                                        ストック：${currentStock}本 
+                                        ${currentStock >= 6 ? '<span class="animate-max ml-1">⚠️ MAX!!</span>' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            <div onclick="toggleTask('${item.id}')" class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                            </div>
+                        </div>
+                        ${keyHtml}
+                    `;
                     list.appendChild(card);
 
                 } else if (item.isColorfulStore) {
@@ -663,10 +776,7 @@
                     
                     let gridHtml = `<div class="grid grid-cols-1 gap-3 mt-6">`;
                     for (let i = 0; i < 60; i += 5) {
-                        const start = i + 1;
-                        const end = i + 4;
-                        const boss = i + 5;
-                        
+                        const start = i + 1; const end = i + 4; const boss = i + 5;
                         const isPreparation = boss > 50; 
                         const rangeDone = state.regdinisFloor >= end;
                         const bossDone = state.regdinisFloor >= boss;
@@ -690,7 +800,7 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
-                                    ${item.icon}
+                                    <span class="${isChecked ? 'text-orange-400' : 'text-stone-800'}">♜</span>
                                 </div>
                                 <div>
                                     <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
