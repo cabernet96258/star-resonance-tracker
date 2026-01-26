@@ -148,15 +148,15 @@
             <div class="overflow-y-auto pr-2 space-y-5 text-sm text-stone-300 scrollbar-thin">
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">🔘 基本の記録</h4>
-                    <p>枠をタップしてチェック！やり残しがないように確認！</p>
+                    <p>枠をタップしてチェック！やり残しがないように確認しましょう。新しく完了したときはポコッと弾けます。</p>
                 </section>
 
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">⏰ 朝5時の自動更新</h4>
                     <p>・日課：毎日朝5時にリセット<br>
                        ・週課・物資：月曜朝5時にリセット<br>
-                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。</p> 
-                <section>
+                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。</p>
+                </section>
 
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">🔑 鍵の管理</h4>
@@ -254,7 +254,7 @@
             { id: 'd_alch_exp', label: '錬金実験', desc: '10EXP×5・玩具花火', category: 'Lifestyle', icon: '⚗️' },
             { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
             { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
-            { id: 'd_focus', label: 'フォーカス消費', desc: '400・日・上限2000', category: 'Lifestyle', icon: '⚡' },
+            { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
             { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
             { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
             { id: 'd_guild_dance', label: 'ギルドダンス', desc: '金 19:30～19:55：ギルド貢献度・EXP', category: 'Lifestyle', icon: '💃', schedule: [5] }
@@ -283,8 +283,8 @@
             { id: 'm_mineral', type: '鉱物学', req: '粘土80・細砂80・清らかな湧き水80・金属砂80', category: 'Economy' },
         ];
 
-        // --- STATE ---
-        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v7')) || {
+        // --- STATE & STORAGE ---
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v8')) || {
             checked: {},
             lastDailyReset: 0,
             lastWeeklyReset: 0,
@@ -316,7 +316,7 @@
                 bossKeyCount: state.bossKeyCount,
                 eliteKeyCount: state.eliteKeyCount
             };
-            localStorage.setItem('sr_assist_mobile_v7', JSON.stringify(dataToSave));
+            localStorage.setItem('sr_assist_mobile_v8', JSON.stringify(dataToSave));
         }
 
         function getLatestDailyDeadline(now) {
@@ -842,7 +842,7 @@
                             ${item.icon}
                         </div>
                         <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
-                            <h4 class="text-sm font-bold ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                            <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
                             <p class="text-[10px] ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
                         </div>
                         <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
