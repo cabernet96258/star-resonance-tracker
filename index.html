@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BPSR Assist Mobile：スタレゾの日課・週課を忘れずにチェック！スタレゾアシストモバイルトラッカー</title>
+    
+    <!-- 【重要】Google検索結果のタイトル部分（最適化済み：39文字） -->
+    <title>BPSR Assist Mobile：スタレゾの日課・週課を忘れずにチェック！</title>
+    
+    <!-- 【重要】Google検索結果に表示される説明文（スニペット） -->
+    <meta name="description" content="スターレゾナンス（スタレゾ）の活動をスマートに記録できるモバイルトラッカー。毎日の日課、週課、物資提出、遺跡攻略や鍵のストック状況をポコッと弾ける演出で楽しく管理。朝5時の自動リセット・鍵補充機能付き。">
+
     <!-- 楽しい雰囲気を出すための丸文字フォント -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -275,7 +281,7 @@
         const materialData = [
             { id: 'm_wood', type: '木工', req: '松材・40', category: 'Economy' },
             { id: 'm_cryst', type: '結晶学', req: '粘土80・細砂80・清らかな湧水80・岩塩80', category: 'Economy' },
-            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・基質土80・樹脂80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・樹脂80', category: 'Economy' },
             { id: 'm_alch', type: '錬金', req: '謎の石の粉・40', category: 'Economy' },
             { id: 'm_forge', type: '鍛造', req: '鉄インゴット・40', category: 'Economy' },
             { id: 'm_textile', type: '織物', req: '改良綿布・20', category: 'Economy' },
@@ -697,7 +703,7 @@
                         const isExact = currentStock === k;
                         keyHtml += `
                             <button onclick="setKeyStock('${item.id}', ${k})" 
-                                class="key-slot flex-1 py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${isActive ? 'bg-orange-500 border-orange-400 shadow-sm' : 'bg-stone-50 border-stone-100'} ${isExact ? 'scale-110 z-10' : ''}">
+                                class="key-slot flex-1 py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${isActive ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-stone-50 border-stone-100'} ${isExact ? 'scale-110 z-10' : ''}">
                                 <span class="text-sm">${isActive ? '🔑' : '⚪'}</span>
                                 <span class="text-[8px] font-black mt-0.5 ${isActive ? 'text-white' : 'text-stone-400'}">${k}</span>
                             </button>
@@ -821,7 +827,7 @@
                 } else if (state.activeTab === 'materials') {
                     const mCard = document.createElement('div');
                     mCard.onclick = () => toggleTask(item.id);
-                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-transparent'} ${isNew ? 'animate-pop' : ''}`;
+                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
                     mCard.innerHTML = `
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-black uppercase text-stone-400 font-bold">${item.type}</span>
