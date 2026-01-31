@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BPSR Assist Mobile：ご利用ガイド更新版</title>
+    <title>BPSR Assist Mobile：スタレゾの日課・週課を忘れずにチェック！スタレゾアシストモバイルトラッカー</title>
     <!-- 楽しい雰囲気を出すための丸文字フォント -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -153,9 +153,10 @@
 
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">⏰ 朝5時の自動更新</h4>
-                    <p>・日課：毎日朝5時にリセット<br>
-                       ・週課・物資：月曜朝5時にリセット<br>
-                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。</p>
+                    <p>・日課：毎日朝5時に自動リセット<br>
+                       ・週課・物資：月曜朝5時に自動リセット<br>
+                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。<br>
+                       ※リセットボタンを押した際も、日付が変わっていれば補充が実行されます。</p>
                 </section>
 
                 <section>
@@ -171,7 +172,7 @@
 
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">📊 グラフと進捗</h4>
-                    <p>上のレーダーグラフで「今日の活動バランス」が分かります。まんべんなく埋めて最強の冒険者を目指しましょう！</p>
+                    <p>上のレーダーグラフで「今日の活動バランス」が分かります。やり残しがないようにしましょう！</p>
                 </section>
             </div>
 
@@ -470,6 +471,8 @@
         }
 
         function resetCategory() {
+            autoResetCheck();
+
             state.lastClickedId = null;
             if (state.activeTab === 'daily') {
                 getVisibleDailyTasks().forEach(t => delete state.checked[t.id]);
