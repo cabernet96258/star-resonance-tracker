@@ -172,8 +172,8 @@
 
                 <section>
                     <h4 class="font-black text-orange-500 mb-1">♜ 遺跡とレイド</h4>
-                    <p>・レグディニス遺跡：クリアした階をタップすれば、それまでの階を一括チェック！<br>
-                       ・浮島レイド：3種の竜のEasy/Hardを制覇するとカード全体が完了します。</p>
+                    <p>・レグディニス遺跡：クリアした階をタップすれば、それまでの階を一括チェック！（現在60層まで対応中）<br>
+                       ・浮島レイド：全属性の各難易度を制覇するとカード全体が完了します。</p>
                 </section>
 
                 <section>
@@ -274,14 +274,14 @@
             { id: 'w_module', label: 'モジュール', desc: '分解・交換', category: 'Economy', icon: '⚙️' },
             { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取・装備：月曜朝5時の時点の職', category: 'Economy', icon: '🏛️' },
             { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬・活躍度確認', category: 'Lifestyle', icon: '📊' },
-            { id: 'w_floating_raid', label: '浮島レイド(神竜の枷)', desc: '全竜 Easy & Hard 制覇', category: 'Battle', icon: '🐉', isComplex: true },
+            { id: 'w_floating_raid', label: '浮島レイド(神竜の枷)', desc: '全竜 Easy / Hard / ナイトメア 制覇', category: 'Battle', icon: '🐉', isComplex: true },
             { id: 'w_regdinis', label: 'レグディニス遺跡', desc: 'タワー攻略状況', category: 'Battle', icon: '♜', isRuins: true },
         ];
 
         const materialData = [
             { id: 'm_wood', type: '木工', req: '松材・40', category: 'Economy' },
             { id: 'm_cryst', type: '結晶学', req: '粘土80・細砂80・清らかな湧水80・岩塩80', category: 'Economy' },
-            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・樹脂80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・基質土80・樹脂80', category: 'Economy' },
             { id: 'm_alch', type: '錬金', req: '謎の石の粉・40', category: 'Economy' },
             { id: 'm_forge', type: '鍛造', req: '鉄インゴット・40', category: 'Economy' },
             { id: 'm_textile', type: '織物', req: '改良綿布・20', category: 'Economy' },
@@ -291,7 +291,7 @@
         ];
 
         // --- STATE & STORAGE ---
-        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v8')) || {
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v9')) || {
             checked: {},
             lastDailyReset: 0,
             lastWeeklyReset: 0,
@@ -323,7 +323,7 @@
                 bossKeyCount: state.bossKeyCount,
                 eliteKeyCount: state.eliteKeyCount
             };
-            localStorage.setItem('sr_assist_mobile_v8', JSON.stringify(dataToSave));
+            localStorage.setItem('sr_assist_mobile_v9', JSON.stringify(dataToSave));
         }
 
         function getLatestDailyDeadline(now) {
@@ -416,7 +416,12 @@
             }
             
             const dragons = ['ice', 'dark', 'light'];
-            const allCleared = dragons.every(d => state.checked[`w_raid_${d}_easy`] && state.checked[`w_raid_${d}_hard`]);
+            const allCleared = dragons.every(d => {
+                const e = state.checked[`w_raid_${d}_easy`];
+                const h = state.checked[`w_raid_${d}_hard`];
+                if (d === 'light') return e && h; // 光竜は現在Easy, Hardまで
+                return e && h && state.checked[`w_raid_${d}_nightmare`];
+            });
             
             if (allCleared) {
                 if (!state.checked['w_floating_raid']) state.lastClickedId = 'w_floating_raid';
@@ -461,7 +466,7 @@
         }
 
         function setRegdinisFloor(floor) {
-            if (floor > 50) return; 
+            if (floor > 60) return; 
 
             if (state.regdinisFloor === floor) {
                 state.regdinisFloor = Math.max(0, floor - 5);
@@ -470,7 +475,7 @@
             }
             
             state.lastClickedId = 'w_regdinis';
-            if (state.regdinisFloor >= 50) state.checked['w_regdinis'] = true;
+            if (state.regdinisFloor >= 60) state.checked['w_regdinis'] = true;
             else delete state.checked['w_regdinis'];
             save();
             updateUI();
@@ -489,7 +494,7 @@
                         ['ice', 'dark', 'light'].forEach(d => {
                             delete state.checked[`w_raid_${d}_easy`];
                             delete state.checked[`w_raid_${d}_hard`];
-                            delete state.checked[`w_raid_${d}_ultimate`];
+                            delete state.checked[`w_raid_${d}_nightmare`];
                         });
                     }
                     if (t.isColorfulStore) {
@@ -526,7 +531,7 @@
 
         function getStats(data) {
             const done = data.filter(item => {
-                if (item.isRuins) return state.regdinisFloor >= 50;
+                if (item.isRuins) return state.regdinisFloor >= 60;
                 return state.checked[item.id];
             }).length;
             return { pct: data.length ? Math.round((done / data.length) * 100) : 0 };
@@ -539,7 +544,7 @@
             all.forEach(item => {
                 scores[item.category].t++;
                 if (item.isRuins) {
-                    if (state.regdinisFloor >= 50) scores[item.category].d++;
+                    if (state.regdinisFloor >= 60) scores[item.category].d++;
                 } else {
                     if (state.checked[item.id]) scores[item.category].d++;
                 }
@@ -629,7 +634,7 @@
             const data = state.activeTab === 'daily' ? getVisibleDailyTasks() : (state.activeTab === 'weekly' ? weeklyData : materialData);
 
             data.forEach(item => {
-                const isChecked = state.checked[item.id] || (item.isRuins && state.regdinisFloor >= 50);
+                const isChecked = state.checked[item.id] || (item.isRuins && state.regdinisFloor >= 60);
                 const isNew = state.lastClickedId === item.id;
 
                 if (item.isComplex) {
@@ -658,8 +663,9 @@
                         else if(dId === 'dark') { dName = "闇竜"; dIcon = "🌑"; }
                         else { dName = "光竜"; dIcon = "✨"; }
 
-                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`];
-                        const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard`;
+                        const dragonIsNmReleased = dId !== 'light';
+                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`] && (!dragonIsNmReleased || state.checked[`w_raid_${dId}_nightmare`]);
+                        const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard` || state.lastClickedId === `w_raid_${dId}_nightmare`;
 
                         content += `
                             <div class="${dragonCleared ? 'bg-orange-100 border-orange-200' : 'bg-stone-50 border-stone-100'} p-2 rounded-2xl border flex flex-col items-center transition-all ${isDragonNew && dragonCleared ? 'animate-pop' : ''}">
@@ -673,9 +679,12 @@
                                         <span class="text-[10px] font-bold text-stone-500">Hard</span>
                                         <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_hard`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_hard')">
                                     </label>
-                                    <label class="flex items-center justify-between gap-1 opacity-40">
-                                        <span class="text-[10px] font-bold text-stone-700">Ult</span>
-                                        <div class="w-6 h-6 rounded flex items-center justify-center bg-stone-200 text-[10px] text-stone-500">🔒</div>
+                                    <label class="flex items-center justify-between gap-1 ${!dragonIsNmReleased ? 'opacity-40' : ''}">
+                                        <span class="text-[10px] font-bold text-stone-700">Night</span>
+                                        ${dragonIsNmReleased ? 
+                                            `<input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_nightmare`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_nightmare')">` :
+                                            `<div class="w-6 h-6 rounded flex items-center justify-center bg-stone-200 text-[10px] text-stone-500">🔒</div>`
+                                        }
                                     </label>
                                 </div>
                                 ${dragonCleared ? '<div class="mt-2 text-[8px] text-orange-600 font-black animate-pop tracking-tighter">COMPLETE！</div>' : ''}
@@ -786,7 +795,7 @@
                     let gridHtml = `<div class="grid grid-cols-1 gap-3 mt-6">`;
                     for (let i = 0; i < 60; i += 5) {
                         const start = i + 1; const end = i + 4; const boss = i + 5;
-                        const isPreparation = boss > 50; 
+                        const isPreparation = boss > 60; 
                         const rangeDone = state.regdinisFloor >= end;
                         const bossDone = state.regdinisFloor >= boss;
 
@@ -813,7 +822,7 @@
                                 </div>
                                 <div>
                                     <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
-                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">最高：${state.regdinisFloor}層クリア（50層まで実装中）</p>
+                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">最高：${state.regdinisFloor}層クリア（60層まで実装中）</p>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -827,7 +836,7 @@
                 } else if (state.activeTab === 'materials') {
                     const mCard = document.createElement('div');
                     mCard.onclick = () => toggleTask(item.id);
-                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-transparent'} ${isNew ? 'animate-pop' : ''}`;
                     mCard.innerHTML = `
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-black uppercase text-stone-400 font-bold">${item.type}</span>
