@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- 【重要】Google検索結果のタイトル部分（最適化済み：39文字） -->
+    <title>【スタレゾ】BPSR Assist Mobile：スタレゾの日課・週課をチェック！</title>
+    
+    <!-- 【重要】Google検索結果に表示される説明文（スニペット） -->
+    <meta name="description" content="スタレゾの日課・週課をチェックできるモバイルトラッカー。毎日の日課、週課、物資提出、遺跡攻略や鍵のストック状況をポコッと弾ける演出で楽しく管理。">
+
+    <!-- 楽しい雰囲気を出すための丸文字フォント -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+
+        /* タップ時のハイライトを抑制 */
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track { background: #1c1917; }
+        ::-webkit-scrollbar-thumb {
+            background: #44403c; 
+            border-radius: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 250px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+
+        /* ナビゲーションタブのスタイル */
+        .tab-active {
+            border-bottom: 5px solid #f97316;
+            color: #ffffff !important;
+            font-weight: 800;
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* お祝いのポコポコアニメーション */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 警告アニメーション */
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); color: #ef4444; }
+            50% { transform: scale(1.1); color: #f87171; }
+        }
+        .animate-max {
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* カスタムチェックボックス */
+        .custom-check {
+            appearance: none;
+            width: 1.6rem;
+            height: 1.6rem;
+            border: 3px solid #d6d3d1;
+            border-radius: 0.5rem;
+            background-color: white;
+            display: inline-grid; place-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .custom-check:checked {
+            background-color: #f97316;
+            border-color: #fb923c;
+        }
+        .custom-check:checked::before {
+            content: "✔";
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .custom-check:disabled {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* 遺跡のフロアボタン */
+        .floor-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            padding: 0.75rem 0.25rem;
+        }
+        .floor-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background-color: #44403c !important;
+            color: #78716c !important;
+        }
+
+        .key-slot {
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body class="bg-stone-950 text-stone-100 font-sans min-h-screen flex flex-col pb-10">
+
+    <header class="bg-stone-900 shadow-lg border-b border-stone-800 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-3xl font-extrabold text-white tracking-tight flex items-center">
+                    BPSR Assist <span class="text-orange-500 ml-2">Mobile</span>
+                </h1>
+                <p class="text-[10px] md:text-sm text-stone-400 font-bold">スタレゾの活動をスマートに記録</p>
+            </div>
+            <button onclick="toggleHelp()" class="bg-stone-800 text-stone-300 w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-inner border border-stone-700">
+                ❓
+            </button>
+        </div>
+    </header>
+
+    <!-- Help Overlay -->
+    <div id="help-overlay" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-stone-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-700 animate-fade-in flex flex-col max-h-[90vh]">
+            <h3 class="font-extrabold text-xl mb-4 text-white text-center border-b border-stone-800 pb-2">📜 使い方ガイド</h3>
+            
+            <div class="overflow-y-auto pr-2 space-y-5 text-sm text-stone-300 scrollbar-thin">
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">🔘 基本の記録</h4>
+                    <p>枠をタップしてチェック！日課・週課のやり残しがないように確認しましょう。新しく完了したときはポコッと弾けます。</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">⏰ 朝5時の自動更新</h4>
+                    <p>・日課：毎日朝5時に自動リセット<br>
+                       ・週課・物資：月曜朝5時に自動リセット<br>
+                       ・鍵ストック：毎朝5時に2本ずつ自動補充されます（最大6本まで）。<br>
+                       ※リセットボタンを押した際も、日付が変わっていれば補充が実行されます。</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">🔑 鍵の管理</h4>
+                    <p>ボス・精鋭の鍵本数をタップで記録。ストック本数は日課をリセットしても維持されます。6本たまると「⚠️ MAX!!」でお知らせ！</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">♜ 遺跡とレイド</h4>
+                    <p>・レグディニス遺跡：クリアした階をタップすれば、それまでの階を一括チェック！（現在60層まで対応中）<br>
+                       ・浮島レイド：全属性の各難易度を制覇するとカード全体が完了します。</p>
+                </section>
+
+                <section>
+                    <h4 class="font-black text-orange-500 mb-1">📊 グラフと進捗</h4>
+                    <p>上のレーダーグラフで「今日の活動バランス」が分かります。やり残しがないようにしましょう！</p>
+                </section>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                <button onclick="toggleHelp()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black text-lg shadow-lg">OK、わかった！</button>
+                <p class="text-[10px] text-stone-500 text-center font-bold tracking-widest">©かべるね</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow container mx-auto px-4 py-4 max-w-4xl space-y-6">
+
+        <!-- Progress Overview -->
+        <section class="bg-stone-900 rounded-3xl shadow-sm p-4 border border-stone-800 overflow-hidden">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="w-full md:w-1/2">
+                    <div class="chart-container">
+                        <canvas id="progressRadar"></canvas>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-1/2 grid grid-cols-1 gap-4">
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">DAILY PROGRESS</span>
+                            <span id="daily-text" class="text-orange-500 text-lg">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="daily-bar" class="bg-orange-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">WEEKLY PROGRESS</span>
+                            <span id="weekly-text" class="text-stone-300 text-lg">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="weekly-bar" class="bg-stone-300 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-950/50 p-4 rounded-2xl border border-stone-800 shadow-inner">
+                        <div class="flex justify-between text-xs font-black mb-1 tracking-wider uppercase">
+                            <span class="text-stone-400">MATERIALS SUBMISSION</span>
+                            <span id="material-text" class="text-amber-500 text-lg">0%</span>
+                        </div>
+                        <div class="w-full bg-stone-800 rounded-full h-3">
+                            <div id="material-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex bg-stone-800 rounded-2xl shadow-xl border border-stone-700 overflow-hidden sticky top-[76px] z-10 p-1">
+            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
+                日課
+            </button>
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
+                週課
+            </button>
+            <button onclick="switchTab('materials')" id="tab-materials" class="flex-1 py-4 text-center text-lg font-black transition-all text-stone-400 rounded-xl">
+                物資
+            </button>
+        </nav>
+
+        <div id="content-area" class="pb-10"></div>
+    </main>
+
+    <script>
+        const dailyData = [
+            { id: 'd_guild_att', label: 'ギルドチェックイン', desc: 'ギルドEXP・ギルド資金・ギルド活躍度', category: 'Lifestyle', icon: '🏢' },
+            { id: 'd_guild_trans', label: 'ギルド輸送', desc: 'ギルドコイン・ルーノ・宝箱など', category: 'Economy', icon: '🚚' },
+            { id: 'd_shop_myst', label: '神秘ストア', desc: '最上級素材BOX・ランクアップの書・優待・箱・結晶', category: 'Economy', icon: '🛒' },
+            { id: 'd_pioneer_req', label: '開拓局依頼', desc: 'ルーノ・名声・GC・メダル', category: 'Lifestyle', icon: '📜' },
+            { id: 'd_boss_hunt', label: 'ボス討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '👹', isKeyTask: true },
+            { id: 'd_elite_hunt', label: '精鋭討伐', desc: '鍵消化・ウィル回収', category: 'Battle', icon: '🛡️', isKeyTask: true },
+            { id: 'd_home_req', label: 'ホーム依頼', desc: 'レア素材・ホームEXP・ホームコイン・ホーム肥料', category: 'Lifestyle', icon: '🏠' },
+            { id: 'd_flower', label: '花の栽培', desc: '水やり・収穫', category: 'Lifestyle', icon: '🌻' },
+            { id: 'd_alch_exp', label: '錬金実験', desc: '10EXP×5・玩具花火', category: 'Lifestyle', icon: '⚗️' },
+            { id: 'd_unstable', label: '不安定な空間', desc: '装備・強化素材', category: 'Battle', icon: '⚔️' },
+            { id: 'd_season', label: 'シーズン活躍度', desc: 'EXP・GC・ルーノ・シーズンPなど', category: 'Economy', icon: '🎁' },
+            { id: 'd_focus', label: 'フォーカス消費', desc: '400/日・上限2000', category: 'Lifestyle', icon: '⚡' },
+            { id: 'd_raid', label: 'ワールドレイド', desc: '20:30〜22:00開催', category: 'Battle', icon: '⏰' },
+            { id: 'd_guild_hunt', label: 'ギルドハント', desc: '金〜日 10:00～24:00：ギルド貢献度・素材', category: 'Battle', icon: '🏹', schedule: [5, 6, 0] },
+            { id: 'd_guild_dance', label: 'ギルドダンス', desc: '金 19:30～19:55：ギルド貢献度・EXP', category: 'Lifestyle', icon: '💃', schedule: [5] }
+        ];
+
+        const weeklyData = [
+            { id: 'w_shop_colorful', label: 'カラフルストア', desc: 'ジェム・友情・GC・名声の各項目を確認', category: 'Economy', icon: '💎', isColorfulStore: true },
+            { id: 'w_shop_season', label: 'シーズンストア', desc: '上級素材・虚蝕・パワーパーツ', category: 'Economy', icon: '🍂' },
+            { id: 'w_shop_guild', label: 'ギルド雑貨屋', desc: 'フォーカス回復剤購入', category: 'Economy', icon: '🏚️' },
+            { id: 'w_module', label: 'モジュール', desc: '分解・交換', category: 'Economy', icon: '⚙️' },
+            { id: 'w_pioneer', label: '開拓者褒章', desc: '月曜受取・装備：月曜朝5時の時点の職', category: 'Economy', icon: '🏛️' },
+            { id: 'w_guild_act', label: 'ギルド週間活躍度報酬', desc: 'アイテム報酬・活躍度確認', category: 'Lifestyle', icon: '📊' },
+            { id: 'w_floating_raid', label: '浮島レイド(神竜の枷)', desc: '全竜 Easy / Hard / ナイトメア 制覇', category: 'Battle', icon: '🐉', isComplex: true },
+            { id: 'w_regdinis', label: 'レグディニス遺跡', desc: 'タワー攻略状況', category: 'Battle', icon: '♜', isRuins: true },
+        ];
+
+        const materialData = [
+            { id: 'm_wood', type: '木工', req: '松材・40', category: 'Economy' },
+            { id: 'm_cryst', type: '結晶学', req: '粘土80・細砂80・清らかな湧水80・岩塩80', category: 'Economy' },
+            { id: 'm_botany', type: '植物学', req: '干し草80・酸っぱい果実液体80・基質土80・樹脂80', category: 'Economy' },
+            { id: 'm_alch', type: '錬金', req: '謎の石の粉・40', category: 'Economy' },
+            { id: 'm_forge', type: '鍛造', req: '鉄インゴット・40', category: 'Economy' },
+            { id: 'm_textile', type: '織物', req: '改良綿布・20', category: 'Economy' },
+            { id: 'm_craft', type: '工芸', req: '砂岩の砥石・40', category: 'Economy' },
+            { id: 'm_cook', type: '料理', req: '小麦粉・45', category: 'Economy' },
+            { id: 'm_mineral', type: '鉱物学', req: '粘土80・細砂80・清らかな湧き水80・金属砂80', category: 'Economy' },
+        ];
+
+        // --- STATE & STORAGE ---
+        const savedState = JSON.parse(localStorage.getItem('sr_assist_mobile_v9')) || {
+            checked: {},
+            lastDailyReset: 0,
+            lastWeeklyReset: 0,
+            regdinisFloor: 0,
+            bossKeyCount: 0,
+            eliteKeyCount: 0
+        };
+
+        let state = {
+            checked: savedState.checked || {},
+            lastDailyReset: savedState.lastDailyReset || 0,
+            lastWeeklyReset: savedState.lastWeeklyReset || 0,
+            regdinisFloor: savedState.regdinisFloor || 0,
+            bossKeyCount: savedState.bossKeyCount || 0,
+            eliteKeyCount: savedState.eliteKeyCount || 0,
+            activeTab: 'daily',
+            lastClickedId: null 
+        };
+
+        let myChart = null;
+
+        // --- UTILS ---
+        function save() {
+            const dataToSave = {
+                checked: state.checked,
+                lastDailyReset: state.lastDailyReset,
+                lastWeeklyReset: state.lastWeeklyReset,
+                regdinisFloor: state.regdinisFloor,
+                bossKeyCount: state.bossKeyCount,
+                eliteKeyCount: state.eliteKeyCount
+            };
+            localStorage.setItem('sr_assist_mobile_v9', JSON.stringify(dataToSave));
+        }
+
+        function getLatestDailyDeadline(now) {
+            const deadline = new Date(now);
+            deadline.setHours(5, 0, 0, 0);
+            if (now < deadline) deadline.setDate(deadline.getDate() - 1);
+            return deadline.getTime();
+        }
+
+        function getLatestWeeklyDeadline(now) {
+            const deadline = new Date(now);
+            deadline.setHours(5, 0, 0, 0);
+            let day = deadline.getDay();
+            let diff = (day === 0) ? 6 : day - 1; 
+            deadline.setDate(deadline.getDate() - diff);
+            if (now < deadline) deadline.setDate(deadline.getDate() - 7);
+            return deadline.getTime();
+        }
+
+        function autoResetCheck() {
+            const now = Date.now();
+            const dailyDeadline = getLatestDailyDeadline(now);
+            const weeklyDeadline = getLatestWeeklyDeadline(now);
+            let changed = false;
+
+            if (state.lastDailyReset < dailyDeadline) {
+                const diffTime = dailyDeadline - state.lastDailyReset;
+                const daysPassed = Math.max(1, Math.floor(diffTime / (24 * 60 * 60 * 1000)));
+
+                Object.keys(state.checked).forEach(key => {
+                    if (key.startsWith('d_')) delete state.checked[key];
+                });
+
+                state.bossKeyCount = Math.min(6, state.bossKeyCount + (daysPassed * 2));
+                state.eliteKeyCount = Math.min(6, state.eliteKeyCount + (daysPassed * 2));
+
+                state.lastDailyReset = dailyDeadline;
+                changed = true;
+            }
+
+            if (state.lastWeeklyReset < weeklyDeadline) {
+                Object.keys(state.checked).forEach(key => {
+                    if (key.startsWith('w_') || key.startsWith('m_')) delete state.checked[key];
+                });
+                state.regdinisFloor = 0;
+                state.lastWeeklyReset = weeklyDeadline;
+                changed = true;
+            }
+
+            if (changed) save();
+        }
+
+        function getVisibleDailyTasks() {
+            const today = new Date().getDay();
+            return dailyData.filter(task => !task.schedule || task.schedule.includes(today));
+        }
+
+        // --- CORE LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            autoResetCheck();
+            initChart();
+            switchTab('daily');
+        });
+
+        function toggleHelp() {
+            const el = document.getElementById('help-overlay');
+            el.classList.toggle('hidden');
+        }
+
+        function toggleTask(id) {
+            state.lastClickedId = id;
+            if (state.checked[id]) {
+                delete state.checked[id];
+                state.lastClickedId = null;
+            } else {
+                state.checked[id] = true;
+            }
+            save();
+            updateUI();
+        }
+
+        function toggleSubRaid(subId) {
+            const fullId = `w_raid_${subId}`;
+            state.lastClickedId = fullId;
+            if (state.checked[fullId]) {
+                delete state.checked[fullId];
+                state.lastClickedId = null;
+            } else {
+                state.checked[fullId] = true;
+            }
+            
+            const dragons = ['ice', 'dark', 'light'];
+            const allCleared = dragons.every(d => {
+                const e = state.checked[`w_raid_${d}_easy`];
+                const h = state.checked[`w_raid_${d}_hard`];
+                return e && h && state.checked[`w_raid_${d}_nightmare`];
+            });
+            
+            if (allCleared) {
+                if (!state.checked['w_floating_raid']) state.lastClickedId = 'w_floating_raid';
+                state.checked['w_floating_raid'] = true;
+            } else {
+                delete state.checked['w_floating_raid'];
+            }
+            
+            save();
+            updateUI();
+        }
+
+        function toggleSubStore(subId) {
+            const fullId = `w_shop_${subId}`;
+            state.lastClickedId = fullId;
+            if (state.checked[fullId]) {
+                delete state.checked[fullId];
+                state.lastClickedId = null;
+            } else {
+                state.checked[fullId] = true;
+            }
+            
+            const subs = ['gem', 'friend', 'gc', 'fame'];
+            const allCleared = subs.every(s => state.checked[`w_shop_${s}`]);
+            
+            if (allCleared) {
+                if (!state.checked['w_shop_colorful']) state.lastClickedId = 'w_shop_colorful';
+                state.checked['w_shop_colorful'] = true;
+            } else {
+                delete state.checked['w_shop_colorful'];
+            }
+            
+            save();
+            updateUI();
+        }
+
+        function setKeyStock(taskId, count) {
+            if (taskId === 'd_boss_hunt') state.bossKeyCount = count;
+            if (taskId === 'd_elite_hunt') state.eliteKeyCount = count;
+            save();
+            updateUI();
+        }
+
+        function setRegdinisFloor(floor) {
+            if (floor > 60) return; 
+
+            if (state.regdinisFloor === floor) {
+                state.regdinisFloor = Math.max(0, floor - 5);
+            } else {
+                state.regdinisFloor = floor;
+            }
+            
+            state.lastClickedId = 'w_regdinis';
+            if (state.regdinisFloor >= 60) state.checked['w_regdinis'] = true;
+            else delete state.checked['w_regdinis'];
+            save();
+            updateUI();
+        }
+
+        function resetCategory() {
+            autoResetCheck();
+
+            state.lastClickedId = null;
+            if (state.activeTab === 'daily') {
+                getVisibleDailyTasks().forEach(t => delete state.checked[t.id]);
+            } else if (state.activeTab === 'weekly') {
+                weeklyData.forEach(t => {
+                    delete state.checked[t.id];
+                    if (t.isComplex) {
+                        ['ice', 'dark', 'light'].forEach(d => {
+                            delete state.checked[`w_raid_${d}_easy`];
+                            delete state.checked[`w_raid_${d}_hard`];
+                            delete state.checked[`w_raid_${d}_nightmare`];
+                        });
+                    }
+                    if (t.isColorfulStore) {
+                        ['gem', 'friend', 'gc', 'fame'].forEach(s => delete state.checked[`w_shop_${s}`]);
+                    }
+                });
+                state.regdinisFloor = 0;
+            } else {
+                materialData.forEach(t => delete state.checked[t.id]);
+            }
+            save();
+            updateUI();
+        }
+
+        function updateUI() {
+            const visibleDaily = getVisibleDailyTasks();
+            const d = getStats(visibleDaily);
+            const w = getStats(weeklyData);
+            const m = getStats(materialData);
+
+            document.getElementById('daily-text').innerText = `${d.pct}%`;
+            document.getElementById('daily-bar').style.width = `${d.pct}%`;
+            document.getElementById('weekly-text').innerText = `${w.pct}%`;
+            document.getElementById('weekly-bar').style.width = `${w.pct}%`;
+            document.getElementById('material-text').innerText = `${m.pct}%`;
+            document.getElementById('material-bar').style.width = `${m.pct}%`;
+
+            if (myChart) {
+                myChart.data.datasets[0].data = getRadarValues();
+                myChart.update();
+            }
+            renderList();
+        }
+
+        function getStats(data) {
+            const done = data.filter(item => {
+                if (item.isRuins) return state.regdinisFloor >= 60;
+                return state.checked[item.id];
+            }).length;
+            return { pct: data.length ? Math.round((done / data.length) * 100) : 0 };
+        }
+
+        function getRadarValues() {
+            let scores = { Battle: {d:0,t:0}, Lifestyle: {d:0,t:0}, Economy: {d:0,t:0} };
+            const visibleDaily = getVisibleDailyTasks();
+            const all = [...visibleDaily, ...weeklyData, ...materialData];
+            all.forEach(item => {
+                scores[item.category].t++;
+                if (item.isRuins) {
+                    if (state.regdinisFloor >= 60) scores[item.category].d++;
+                } else {
+                    if (state.checked[item.id]) scores[item.category].d++;
+                }
+            });
+            return [
+                scores.Battle.t ? (scores.Battle.d / scores.Battle.t) * 100 : 0,
+                scores.Lifestyle.t ? (scores.Lifestyle.d / scores.Lifestyle.t) * 100 : 0,
+                scores.Economy.t ? (scores.Economy.d / scores.Economy.t) * 100 : 0
+            ];
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('progressRadar').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['バトル', '生活', '経済'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: 'rgba(249, 115, 22, 0.35)',
+                        borderColor: 'rgb(249, 115, 22)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: 'rgb(249, 115, 22)',
+                        pointBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { display: false, stepSize: 20 },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { 
+                                font: { size: 14, weight: 'bold', family: "'M PLUS Rounded 1c'" },
+                                color: '#d6d3d1' 
+                            }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function switchTab(name) {
+            state.activeTab = name;
+            state.lastClickedId = null;
+            ['daily', 'weekly', 'materials'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === name) {
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('text-stone-400');
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-stone-400');
+                }
+            });
+            updateUI();
+        }
+
+        function renderList() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = '';
+
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center py-4 animate-fade-in';
+            const days = ["日", "月", "火", "水", "木", "金", "土"];
+            const now = new Date();
+            const dateStr = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]})`;
+
+            header.innerHTML = `
+                <span class="text-xs font-black text-stone-500 tracking-widest uppercase font-bold">
+                    ${state.activeTab === 'daily' ? `Adventure Log [${dateStr}]` : (state.activeTab === 'weekly' ? 'Weekly Milestone' : 'Material Check')}
+                </span>
+                <button onclick="resetCategory()" class="text-[10px] font-black bg-stone-900 text-stone-500 px-4 py-2 rounded-full border border-stone-800 active:scale-95 transition-all">
+                    RELOAD LIST
+                </button>
+            `;
+            container.appendChild(header);
+
+            const list = document.createElement('div');
+            list.className = 'space-y-4 animate-fade-in';
+            const data = state.activeTab === 'daily' ? getVisibleDailyTasks() : (state.activeTab === 'weekly' ? weeklyData : materialData);
+
+            data.forEach(item => {
+                const isChecked = state.checked[item.id] || (item.isRuins && state.regdinisFloor >= 60);
+                const isNew = state.lastClickedId === item.id;
+
+                if (item.isComplex) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let content = `
+                        <div class="flex items-center mb-6">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                ${item.icon}
+                            </div>
+                            <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                                <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mt-2">
+                    `;
+
+                    ['ice', 'dark', 'light'].forEach(dId => {
+                        let dName = ""; let dIcon = "";
+                        if(dId === 'ice') { dName = "氷竜"; dIcon = "❄️"; }
+                        else if(dId === 'dark') { dName = "闇竜"; dIcon = "🌑"; }
+                        else { dName = "光竜"; dIcon = "✨"; }
+
+                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`] && state.checked[`w_raid_${dId}_nightmare`];
+                        const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard` || state.lastClickedId === `w_raid_${dId}_nightmare`;
+
+                        content += `
+                            <div class="${dragonCleared ? 'bg-orange-100 border-orange-200' : 'bg-stone-50 border-stone-100'} p-2 rounded-2xl border flex flex-col items-center transition-all ${isDragonNew && dragonCleared ? 'animate-pop' : ''}">
+                                <span class="text-sm font-black text-stone-900 mb-3">${dIcon}${dName}</span>
+                                <div class="flex flex-col gap-3 w-full">
+                                    <label class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-stone-500">Easy</span>
+                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_easy`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_easy')">
+                                    </label>
+                                    <label class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-stone-500">Hard</span>
+                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_hard`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_hard')">
+                                    </label>
+                                    <label class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-stone-700">Night</span>
+                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_nightmare`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_nightmare')">
+                                    </label>
+                                </div>
+                                ${dragonCleared ? '<div class="mt-2 text-[8px] text-orange-600 font-black animate-pop tracking-tighter">COMPLETE！</div>' : ''}
+                            </div>
+                        `;
+                    });
+                    content += `</div>`;
+                    card.innerHTML = content;
+                    list.appendChild(card);
+
+                } else if (item.isKeyTask) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent animate-pop' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    const currentStock = item.id === 'd_boss_hunt' ? state.bossKeyCount : state.eliteKeyCount;
+
+                    let keyHtml = `<div class="flex justify-between mt-4 gap-1 px-1">`;
+                    keyHtml += `
+                        <button onclick="setKeyStock('${item.id}', 0)" 
+                            class="key-slot flex-[1.5] py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${currentStock === 0 ? 'bg-orange-500 border-orange-400 shadow-md' : 'bg-stone-50 border-stone-100'}">
+                            <span class="text-[10px] font-black ${currentStock === 0 ? 'text-white' : 'text-stone-400'}">None</span>
+                        </button>
+                    `;
+                    for (let k = 1; k <= 6; k++) {
+                        const isActive = currentStock >= k; 
+                        const isExact = currentStock === k;
+                        keyHtml += `
+                            <button onclick="setKeyStock('${item.id}', ${k})" 
+                                class="key-slot flex-1 py-2 rounded-lg border transition-all flex flex-col items-center justify-center ${isActive ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-stone-50 border-stone-100'} ${isExact ? 'scale-110 z-10' : ''}">
+                                <span class="text-sm">${isActive ? '🔑' : '⚪'}</span>
+                                <span class="text-[8px] font-black mt-0.5 ${isActive ? 'text-white' : 'text-stone-400'}">${k}</span>
+                            </button>
+                        `;
+                    }
+                    keyHtml += `</div>`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                    ${item.icon}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">
+                                        ストック：${currentStock}本 
+                                        ${currentStock >= 6 ? '<span class="animate-max ml-1">⚠️ MAX!!</span>' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            <div onclick="toggleTask('${item.id}')" class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                            </div>
+                        </div>
+                        ${keyHtml}
+                    `;
+                    list.appendChild(card);
+
+                } else if (item.isColorfulStore) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border transition-all shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let content = `
+                        <div class="flex items-center mb-6">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                ${item.icon}
+                            </div>
+                            <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                                <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                                ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                    `;
+
+                    const subStores = [
+                        { id: 'gem', label: 'ローズジェム', desc: 'ガチャコイン' },
+                        { id: 'friend', label: '友情ポイント', desc: 'ジェム' },
+                        { id: 'gc', label: 'GC', desc: '御座金・ルーン合金・欠片・結晶・改鋳石・モジュール・奥義・ランクアップ' },
+                        { id: 'fame', label: '名声', desc: 'ウィルコイン' }
+                    ];
+
+                    subStores.forEach(s => {
+                        const subChecked = state.checked[`w_shop_${s.id}`];
+                        const isSubNew = state.lastClickedId === `w_shop_${s.id}`;
+                        content += `
+                            <div onclick="toggleSubStore('${s.id}'); event.stopPropagation();" 
+                                class="${subChecked ? 'bg-orange-50 border-orange-100' : 'bg-stone-50 border-stone-100'} p-3 rounded-2xl border flex items-center transition-all ${isSubNew && subChecked ? 'animate-pop' : ''}">
+                                <input type="checkbox" class="custom-check mr-4" ${subChecked ? 'checked' : ''} onclick="event.stopPropagation();" onchange="toggleSubStore('${s.id}')">
+                                <div class="flex-1">
+                                    <span class="text-sm font-black text-stone-900 ${subChecked ? 'line-through opacity-40' : ''}">${s.label}</span>
+                                    <p class="text-[10px] text-stone-500 font-bold leading-tight ${subChecked ? 'opacity-30' : ''}">${s.desc}</p>
+                                </div>
+                                ${subChecked ? '<span class="text-orange-500 font-black text-[10px] ml-2">OK！</span>' : ''}
+                            </div>
+                        `;
+                    });
+                    content += `</div>`;
+                    card.innerHTML = content;
+                    list.appendChild(card);
+
+                } else if (item.isRuins) {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col p-5 rounded-3xl border shadow-xl transition-all ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    
+                    let gridHtml = `<div class="grid grid-cols-1 gap-3 mt-6">`;
+                    for (let i = 0; i < 60; i += 5) {
+                        const start = i + 1; const end = i + 4; const boss = i + 5;
+                        const isPreparation = boss > 60; 
+                        const rangeDone = state.regdinisFloor >= end;
+                        const bossDone = state.regdinisFloor >= boss;
+
+                        gridHtml += `
+                            <div class="flex gap-2">
+                                <button onclick="setRegdinisFloor(${end})" ${isPreparation ? 'disabled' : ''}
+                                    class="floor-btn flex-1 ${rangeDone ? 'bg-orange-500 text-white shadow-md' : 'bg-stone-100 text-stone-500'}">
+                                    ${start}-${end}
+                                </button>
+                                <button onclick="setRegdinisFloor(${boss})" ${isPreparation ? 'disabled' : ''}
+                                    class="floor-btn w-20 ${bossDone ? 'bg-orange-600 text-white shadow-md' : 'bg-stone-200 text-stone-700'} border-2 ${bossDone ? 'border-orange-400' : 'border-stone-300'}">
+                                    ${boss} <span class="ml-1 text-[10px]">${bossDone ? '👑' : (isPreparation ? '🚧' : '')}</span>
+                                </button>
+                            </div>
+                        `;
+                    }
+                    gridHtml += `</div>`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                                    <span class="${isChecked ? 'text-orange-400' : 'text-stone-800'}">♜</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                                    <p class="text-xs ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">最高：${state.regdinisFloor}層クリア（60層まで実装中）</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                ${isChecked ? '<span class="text-orange-500 font-black text-lg animate-pop">COMPLETE！</span>' : ''}
+                            </div>
+                        </div>
+                        ${gridHtml}
+                    `;
+                    list.appendChild(card);
+
+                } else if (state.activeTab === 'materials') {
+                    const mCard = document.createElement('div');
+                    mCard.onclick = () => toggleTask(item.id);
+                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    mCard.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-black uppercase text-stone-400 font-bold">${item.type}</span>
+                            <span class="text-xl">${isChecked ? '✅' : '📦'}</span>
+                        </div>
+                        <p class="text-[11px] font-black leading-tight ${isChecked ? 'text-stone-200 line-through' : 'text-stone-800'} font-bold">${item.req}</p>
+                    `;
+                    if (!container.querySelector('.material-grid')) {
+                        const mGrid = document.createElement('div');
+                        mGrid.className = 'grid grid-cols-2 gap-4 material-grid';
+                        list.appendChild(mGrid);
+                    }
+                    list.querySelector('.material-grid').appendChild(mCard);
+
+                } else {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.onclick = () => toggleTask(item.id);
+                    itemDiv.className = `flex items-center p-5 rounded-3xl border transition-all active:scale-[0.98] shadow-xl ${isChecked ? 'bg-stone-800 border-transparent' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    itemDiv.innerHTML = `
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mr-5 border-4 ${isChecked ? 'bg-stone-700 border-stone-600' : 'bg-stone-100 border-stone-200'}">
+                            ${item.icon}
+                        </div>
+                        <div class="flex-1 ${isChecked ? 'text-stone-200 opacity-60' : ''}">
+                            <h4 class="text-lg font-black ${isChecked ? 'text-white' : 'text-stone-900'} font-bold">${item.label}</h4>
+                            <p class="text-[10px] ${isChecked ? 'text-stone-300' : 'text-stone-500'} font-bold mt-1">${item.desc}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl border-4 flex items-center justify-center ${isChecked ? 'bg-orange-600 border-orange-500' : 'border-stone-200'}">
+                            ${isChecked ? '<span class="text-white text-xl">✔</span>' : ''}
+                        </div>
+                    `;
+                    list.appendChild(itemDiv);
+                }
+            });
+            container.appendChild(list);
+        }
+    </script>
+</body>
+</html>
