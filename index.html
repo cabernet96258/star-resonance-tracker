@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R0C4DRCBJW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-R0C4DRCBJW');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- 【重要】Google検索結果のタイトル部分（最適化済み：39文字） -->
-    <title>【スタレゾ】BPSR Assist Mobile：スタレゾの日課・週課をチェック！</title>
+    <title>【スタレゾ】BPSR Assist Mobile：スタレゾの日課・週課を忘れずにチェック！</title>
     
     <!-- 【重要】Google検索結果に表示される説明文（スニペット） -->
     <meta name="description" content="スタレゾの日課・週課をチェックできるモバイルトラッカー。毎日の日課、週課、物資提出、遺跡攻略や鍵のストック状況をポコッと弾ける演出で楽しく管理。">
@@ -419,6 +428,7 @@
             const allCleared = dragons.every(d => {
                 const e = state.checked[`w_raid_${d}_easy`];
                 const h = state.checked[`w_raid_${d}_hard`];
+                if (d === 'light') return e && h; // 光竜は現在Easy, Hardまで
                 return e && h && state.checked[`w_raid_${d}_nightmare`];
             });
             
@@ -662,7 +672,8 @@
                         else if(dId === 'dark') { dName = "闇竜"; dIcon = "🌑"; }
                         else { dName = "光竜"; dIcon = "✨"; }
 
-                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`] && state.checked[`w_raid_${dId}_nightmare`];
+                        const dragonIsNmReleased = dId !== 'light';
+                        const dragonCleared = state.checked[`w_raid_${dId}_easy`] && state.checked[`w_raid_${dId}_hard`] && (!dragonIsNmReleased || state.checked[`w_raid_${dId}_nightmare`]);
                         const isDragonNew = state.lastClickedId === `w_raid_${dId}_easy` || state.lastClickedId === `w_raid_${dId}_hard` || state.lastClickedId === `w_raid_${dId}_nightmare`;
 
                         content += `
@@ -677,9 +688,12 @@
                                         <span class="text-[10px] font-bold text-stone-500">Hard</span>
                                         <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_hard`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_hard')">
                                     </label>
-                                    <label class="flex items-center justify-between gap-1">
+                                    <label class="flex items-center justify-between gap-1 ${!dragonIsNmReleased ? 'opacity-40' : ''}">
                                         <span class="text-[10px] font-bold text-stone-700">Night</span>
-                                        <input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_nightmare`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_nightmare')">
+                                        ${dragonIsNmReleased ? 
+                                            `<input type="checkbox" class="custom-check" ${state.checked[`w_raid_${dId}_nightmare`] ? 'checked' : ''} onchange="toggleSubRaid('${dId}_nightmare')">` :
+                                            `<div class="w-6 h-6 rounded flex items-center justify-center bg-stone-200 text-[10px] text-stone-500">🔒</div>`
+                                        }
                                     </label>
                                 </div>
                                 ${dragonCleared ? '<div class="mt-2 text-[8px] text-orange-600 font-black animate-pop tracking-tighter">COMPLETE！</div>' : ''}
@@ -831,7 +845,7 @@
                 } else if (state.activeTab === 'materials') {
                     const mCard = document.createElement('div');
                     mCard.onclick = () => toggleTask(item.id);
-                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-stone-200'} ${isNew ? 'animate-pop' : ''}`;
+                    mCard.className = `border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${isChecked ? 'bg-stone-800 border-transparent opacity-60' : 'bg-white border-transparent'} ${isNew ? 'animate-pop' : ''}`;
                     mCard.innerHTML = `
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-black uppercase text-stone-400 font-bold">${item.type}</span>
